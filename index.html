@@ -215,13 +215,16 @@
             <div id="tab-profile" class="tab-content hidden p-6 pb-24 space-y-6 animate-fade-in">
                 <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2"><i data-lucide="settings" class="w-5 h-5 text-indigo-600"></i> Pengaturan</h2>
                 
-                <div class="bg-white p-5 rounded-2xl border border-gray-100 flex gap-4 shadow-sm">
-                    <div class="w-14 h-14 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-500 shrink-0"><i data-lucide="user" class="w-7 h-7"></i></div>
-                    <div class="flex-1 space-y-3">
-                        <div class="flex items-center gap-3 border-b border-gray-50 pb-2"><i data-lucide="user" class="w-4 h-4 text-gray-400"></i><input type="text" id="prof-name" class="flex-1 text-sm font-bold outline-none" placeholder="Nama Lengkap"/></div>
-                        <div class="flex items-center gap-3 border-b border-gray-50 pb-2"><i data-lucide="mail" class="w-4 h-4 text-gray-400"></i><input type="email" id="prof-email" class="flex-1 text-sm outline-none" placeholder="Alamat Email"/></div>
-                        <div class="flex items-center gap-3 border-b border-gray-50 pb-2"><i data-lucide="phone" class="w-4 h-4 text-gray-400"></i><input type="tel" id="prof-phone" class="flex-1 text-sm outline-none" placeholder="Nomor Handphone"/></div>
+                <div class="bg-white p-5 rounded-2xl border border-gray-100 flex flex-col gap-4 shadow-sm">
+                    <div class="flex gap-4 items-center">
+                        <div class="w-14 h-14 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-500 shrink-0"><i data-lucide="user" class="w-7 h-7"></i></div>
+                        <div class="flex-1 space-y-3">
+                            <div class="flex items-center gap-3 border-b border-gray-50 pb-2"><i data-lucide="user" class="w-4 h-4 text-gray-400"></i><input type="text" id="prof-name" class="flex-1 text-sm font-bold outline-none" placeholder="Nama Lengkap"/></div>
+                            <div class="flex items-center gap-3 border-b border-gray-50 pb-2"><i data-lucide="mail" class="w-4 h-4 text-gray-400"></i><input type="email" id="prof-email" class="flex-1 text-sm outline-none" placeholder="Alamat Email"/></div>
+                            <div class="flex items-center gap-3 border-b border-gray-50 pb-2"><i data-lucide="phone" class="w-4 h-4 text-gray-400"></i><input type="tel" id="prof-phone" class="flex-1 text-sm outline-none" placeholder="Nomor Handphone"/></div>
+                        </div>
                     </div>
+                    <button id="btn-save-profile" class="w-full py-2.5 bg-indigo-600 text-white font-bold rounded-xl shadow-md active:scale-95 transition text-sm">Simpan Profil</button>
                 </div>
 
                 <div class="bg-white p-5 rounded-2xl border border-gray-100 space-y-3 shadow-sm">
@@ -487,7 +490,7 @@
                     if(idx >= 0) state.transactions[idx] = data; else state.transactions.unshift(data);
                     saveLocal('local_transactions', state.transactions);
                 } else if (collectionName === 'settings') {
-                    // Save specific fields locally
+                    // Save specific fields locally (Handled di fungsi masing-masing)
                 }
                 renderAll();
             }
@@ -513,6 +516,8 @@
             if(inc) state.categoriesIncome = JSON.parse(inc);
             const b = localStorage.getItem('local_banks');
             if(b) state.banks = JSON.parse(b);
+            const prof = localStorage.getItem('local_user_profile');
+            if(prof) state.userProfile = JSON.parse(prof);
         };
         const saveLocal = (key, val) => localStorage.setItem(key, JSON.stringify(val));
 
@@ -684,7 +689,7 @@
             if(recsList.length > 0) {
                 html += `<div class="bg-purple-50 p-4 rounded-xl border border-purple-200 shadow-sm animate-fade-in"><h3 class="text-xs font-bold text-purple-800 mb-2 uppercase">Piutang (Uang di Luar)</h3>`;
                 recsList.forEach(([n,v]) => {
-                    html += `<div class="flex justify-between items-center mb-1 text-xs"><span>${n}</span><div class="flex items-center gap-2"><span class="font-bold text-purple-600">${formatRupiah(v)}</span><button onclick="openRepayModal('${n}', ${v}, true)" class="px-2 py-1 bg-purple-50 text-white rounded font-bold transition active:scale-95">Terima</button></div></div>`;
+                    html += `<div class="flex justify-between items-center mb-1 text-xs"><span>${n}</span><div class="flex items-center gap-2"><span class="font-bold text-purple-600">${formatRupiah(v)}</span><button onclick="openRepayModal('${n}', ${v}, true)" class="px-2 py-1 bg-purple-500 text-white rounded font-bold transition active:scale-95">Terima</button></div></div>`;
                 });
                 html += `</div>`;
             }
@@ -842,13 +847,23 @@
 
         // --- EVENT LISTENERS (ATTACHED ONCE) ---
         const initEventListeners = () => {
-            // Document wide listener for saving profile
-            ['prof-name', 'prof-email', 'prof-phone'].forEach(id => {
-                document.getElementById(id).addEventListener('change', async (e) => {
-                    const field = id.split('-')[1];
-                    state.userProfile[field] = e.target.value;
-                    if (state.firebaseUser && state.db) await setDoc(doc(state.db, 'artifacts', state.appId, 'users', state.firebaseUser.uid, 'settings', 'config'), { userProfile: state.userProfile }, {merge: true});
-                });
+            
+            // Profil Handle Save
+            document.getElementById('btn-save-profile').addEventListener('click', async () => {
+                const btn = document.getElementById('btn-save-profile');
+                btn.textContent = 'Menyimpan...';
+                
+                state.userProfile.name = document.getElementById('prof-name').value;
+                state.userProfile.email = document.getElementById('prof-email').value;
+                state.userProfile.phone = document.getElementById('prof-phone').value;
+                
+                saveLocal('local_user_profile', state.userProfile); // Simpan ke Local Storage
+                
+                if (state.firebaseUser && state.db) {
+                    await setDoc(doc(state.db, 'artifacts', state.appId, 'users', state.firebaseUser.uid, 'settings', 'config'), { userProfile: state.userProfile }, {merge: true});
+                }
+                showToast('Profil Tersimpan!');
+                btn.textContent = 'Simpan Profil';
             });
 
             // Form Handlers
@@ -1042,6 +1057,11 @@
             else state.banks.push({name:v, icon:state.newBankIcon});
             document.getElementById('modal-gen-input').value = '';
             
+            // SIMPAN KE LOKAL
+            saveLocal('local_categories_expense', state.categoriesExpense);
+            saveLocal('local_categories_income', state.categoriesIncome);
+            saveLocal('local_banks', state.banks);
+
             if(state.firebaseUser && state.db) await setDoc(doc(state.db, 'artifacts', state.appId, 'users', state.firebaseUser.uid, 'settings', 'config'), { categoriesExpense: state.categoriesExpense, categoriesIncome: state.categoriesIncome, banks: state.banks }, {merge:true});
             openModalGeneral(t); renderAll();
         });
@@ -1052,6 +1072,11 @@
             else if(t==='category_income' && state.categoriesIncome.length>1) state.categoriesIncome.splice(idx,1);
             else if(t==='bank' && state.banks.length>1) state.banks.splice(idx,1);
             
+            // SIMPAN KE LOKAL
+            saveLocal('local_categories_expense', state.categoriesExpense);
+            saveLocal('local_categories_income', state.categoriesIncome);
+            saveLocal('local_banks', state.banks);
+
             if(state.firebaseUser && state.db) await setDoc(doc(state.db, 'artifacts', state.appId, 'users', state.firebaseUser.uid, 'settings', 'config'), { categoriesExpense: state.categoriesExpense, categoriesIncome: state.categoriesIncome, banks: state.banks }, {merge:true});
             openModalGeneral(t); renderAll();
         };
