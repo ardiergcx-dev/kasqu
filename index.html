@@ -352,7 +352,7 @@
 
         // --- GLOBAL STATE ---
         let state = {
-            currentUserEmail: null,
+            currentUserEmail: localStorage.getItem('active_user_email') || null, // Ambil sesi terakhir dari local storage jika ada
             
             transactions: [],
             categoriesExpense: [],
@@ -820,6 +820,7 @@
                     // Cek Password
                     if (users[email] === pass) {
                         state.currentUserEmail = email;
+                        localStorage.setItem('active_user_email', email); // <-- Simpan ke sesi lokal
                     } else {
                         showToast('Kata Sandi Salah!');
                         return;
@@ -829,6 +830,7 @@
                     users[email] = pass;
                     localStorage.setItem('app_auth_users', JSON.stringify(users));
                     state.currentUserEmail = email;
+                    localStorage.setItem('active_user_email', email); // <-- Simpan ke sesi lokal
                 }
                 
                 document.getElementById('settings-login-password').value = '';
@@ -842,6 +844,8 @@
             // LOGOUT BUTTON
             document.getElementById('btn-logout').addEventListener('click', () => {
                 state.currentUserEmail = null;
+                localStorage.removeItem('active_user_email'); // <-- Hapus sesi lokal saat logout
+
                 if(unsubTxs) unsubTxs(); if(unsubSettings) unsubSettings();
                 
                 document.getElementById('sync-status').textContent = 'Local';
