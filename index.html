@@ -23,8 +23,7 @@
         .animate-fade-in { animation: fadeIn 0.3s ease-out; }
         .animate-fade-in-up { animation: fadeInUp 0.4s ease-out; }
         .animate-fade-in-down { animation: fadeInDown 0.4s ease-out; }
-        .animate-pulse-fast { animation: pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
-
+        
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes fadeInDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
@@ -32,18 +31,11 @@
         .tab-btn.active { color: #4f46e5; background-color: #e0e7ff; font-weight: 700; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
         .tab-btn { color: #9ca3af; transition: all 0.2s ease-in-out; }
         
-        /* Modal Overlay Transition */
         .modal { display: none !important; }
         .modal.show { display: flex !important; animation: fadeIn 0.2s ease-out; }
     </style>
 </head>
 <body class="min-h-screen flex justify-center text-gray-800 antialiased">
-
-    <!-- CLOUD LOADING SCREEN -->
-    <div id="loading-screen" class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-indigo-600 text-white p-6 transition-opacity duration-500">
-        <i data-lucide="loader-2" class="animate-spin mb-4 w-10 h-10"></i>
-        <p class="font-bold tracking-widest text-sm uppercase">Menghubungkan Cloud...</p>
-    </div>
 
     <!-- MAIN APP CONTAINER -->
     <div class="w-full max-w-md bg-white shadow-2xl relative flex flex-col h-[100dvh] sm:h-[90vh] sm:rounded-3xl sm:mt-5 overflow-hidden border-gray-200 sm:border">
@@ -104,12 +96,8 @@
                     
                     <input type="date" id="tx-date" required class="w-full p-2.5 text-xs font-medium border rounded-lg outline-none focus:border-indigo-500" />
                     
-                    <!-- Dinamis Form Container -->
-                    <div id="form-dynamic-fields" class="grid grid-cols-2 gap-3">
-                        <!-- Diisi via JS -->
-                    </div>
+                    <div id="form-dynamic-fields" class="grid grid-cols-2 gap-3"></div>
 
-                    <!-- Debt Toggles (Hidden by default) -->
                     <div id="debt-toggles" class="hidden p-3 bg-indigo-50/50 rounded-xl border border-indigo-100 animate-fade-in">
                         <div class="flex gap-2 mb-2">
                             <button type="button" id="btn-debt-me" class="flex-1 py-1 text-[10px] rounded border bg-orange-500 border-orange-600 text-white font-bold transition">Hutang Saya</button>
@@ -137,10 +125,8 @@
                     <p id="toggle-debt-mode" class="text-center text-[10px] text-gray-400 underline cursor-pointer mt-1 font-bold">Catat Hutang / Piutang</p>
                 </form>
 
-                <!-- Active Debts/Receivables -->
                 <div id="active-debts-container" class="space-y-4"></div>
 
-                <!-- History -->
                 <div>
                     <div class="flex justify-between items-center mb-2">
                         <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Riwayat</h3>
@@ -153,9 +139,7 @@
                             </button>
                         </div>
                     </div>
-                    <div id="history-list" class="space-y-2">
-                        <!-- History items via JS -->
-                    </div>
+                    <div id="history-list" class="space-y-2"></div>
                 </div>
             </div>
 
@@ -172,9 +156,7 @@
                     <h3 class="text-sm font-bold text-gray-600 uppercase flex items-center gap-2 tracking-wider">
                         <i data-lucide="wallet" class="w-4 h-4 text-indigo-600"></i> Rincian Dompet
                     </h3>
-                    <div id="wallet-list" class="grid gap-3">
-                        <!-- Wallets via JS -->
-                    </div>
+                    <div id="wallet-list" class="grid gap-3"></div>
                     <p class="text-center text-[10px] text-gray-400 mt-4 italic font-medium">Ketuk 2x pada dompet untuk mengatur saldo manual.</p>
                 </div>
             </div>
@@ -205,26 +187,44 @@
                     <p class="text-xs text-blue-600 font-bold uppercase">Selisih</p>
                     <p id="recap-net" class="text-lg font-bold text-blue-700">Rp 0</p>
                 </div>
-                
-                <div id="chart-container" class="bg-white p-6 rounded-2xl border border-gray-100 flex flex-col items-center shadow-sm">
-                    <!-- Chart via JS -->
-                </div>
+                <div id="chart-container" class="bg-white p-6 rounded-2xl border border-gray-100 flex flex-col items-center shadow-sm"></div>
             </div>
 
             <!-- 4. TAB: PROFILE -->
             <div id="tab-profile" class="tab-content hidden p-6 pb-24 space-y-6 animate-fade-in">
                 <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2"><i data-lucide="settings" class="w-5 h-5 text-indigo-600"></i> Pengaturan</h2>
                 
-                <div class="bg-white p-5 rounded-2xl border border-gray-100 flex flex-col gap-4 shadow-sm">
+                <!-- LOGIN SECTION -->
+                <div id="profile-login-section" class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+                    <div class="text-center mb-4">
+                        <div class="inline-flex bg-indigo-50 p-3 rounded-full mb-2"><i data-lucide="cloud" class="w-6 h-6 text-indigo-600"></i></div>
+                        <h3 class="font-bold text-gray-800 text-sm uppercase tracking-wider">Akun & Sinkronisasi</h3>
+                        <p class="text-[10px] text-gray-400 mt-1 font-medium">Masuk untuk mencadangkan data Anda ke Cloud.</p>
+                    </div>
+                    <form id="settings-login-form" class="space-y-3">
+                        <div class="relative">
+                            <i data-lucide="mail" class="absolute left-3 top-2.5 w-4 h-4 text-gray-400"></i>
+                            <input type="email" id="settings-login-email" placeholder="Alamat Email" required class="w-full pl-9 p-2.5 border border-gray-200 rounded-xl outline-none focus:border-indigo-500 text-xs font-medium" />
+                        </div>
+                        <div class="relative">
+                            <i data-lucide="key" class="absolute left-3 top-2.5 w-4 h-4 text-gray-400"></i>
+                            <input type="password" id="settings-login-password" placeholder="Kata Sandi" required class="w-full pl-9 p-2.5 border border-gray-200 rounded-xl outline-none focus:border-indigo-500 text-xs font-medium" />
+                        </div>
+                        <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-2.5 rounded-xl hover:bg-indigo-700 transition active:scale-95 text-xs tracking-wider uppercase">Masuk / Daftar</button>
+                    </form>
+                </div>
+
+                <!-- PROFILE AUTH SECTION -->
+                <div id="profile-auth-section" class="hidden bg-white p-5 rounded-2xl border border-gray-100 flex-col gap-4 shadow-sm">
                     <div class="flex gap-4 items-center">
                         <div class="w-14 h-14 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-500 shrink-0"><i data-lucide="user" class="w-7 h-7"></i></div>
                         <div class="flex-1 space-y-3">
                             <div class="flex items-center gap-3 border-b border-gray-50 pb-2"><i data-lucide="user" class="w-4 h-4 text-gray-400"></i><input type="text" id="prof-name" class="flex-1 text-sm font-bold outline-none" placeholder="Nama Lengkap"/></div>
-                            <div class="flex items-center gap-3 border-b border-gray-50 pb-2"><i data-lucide="mail" class="w-4 h-4 text-gray-400"></i><input type="email" id="prof-email" class="flex-1 text-sm outline-none" placeholder="Alamat Email"/></div>
+                            <div class="flex items-center gap-3 border-b border-gray-50 pb-2"><i data-lucide="mail" class="w-4 h-4 text-gray-400"></i><input type="email" id="prof-email" class="flex-1 text-sm outline-none bg-white text-gray-500" placeholder="Alamat Email" readonly title="Email tidak dapat diubah"/></div>
                             <div class="flex items-center gap-3 border-b border-gray-50 pb-2"><i data-lucide="phone" class="w-4 h-4 text-gray-400"></i><input type="tel" id="prof-phone" class="flex-1 text-sm outline-none" placeholder="Nomor Handphone"/></div>
                         </div>
                     </div>
-                    <button id="btn-save-profile" class="w-full py-2.5 bg-indigo-600 text-white font-bold rounded-xl shadow-md active:scale-95 transition text-sm">Simpan Profil</button>
+                    <button id="btn-save-profile" class="w-full py-2.5 mt-4 bg-indigo-600 text-white font-bold rounded-xl shadow-md active:scale-95 transition text-sm">Simpan Profil</button>
                 </div>
 
                 <div class="bg-white p-5 rounded-2xl border border-gray-100 space-y-3 shadow-sm">
@@ -246,17 +246,17 @@
                             <button id="btn-reset-do" class="flex-1 py-3 bg-red-600 text-white rounded-xl text-sm font-bold transition active:scale-95 shadow-md">Yakin Reset?</button>
                         </div>
                     </div>
-                </div>
-                
-                <!-- Security (Simplified for Vanilla) -->
-                <div class="bg-white p-5 rounded-2xl border border-gray-100 space-y-3 shadow-sm">
-                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Keamanan & Cloud</h3>
-                    <div id="security-status" class="text-sm font-medium text-gray-600">
-                        Status: <span id="sec-text" class="font-bold">Memeriksa...</span>
+                    <!-- LOGOUT BUTTON -->
+                    <div class="pt-2 border-t border-gray-100 mt-2 hidden" id="logout-container">
+                        <button id="btn-logout" class="w-full flex items-center justify-center gap-2 border border-gray-200 text-gray-600 py-3 rounded-xl font-bold text-sm active:bg-gray-50 transition hover:bg-gray-100"><i data-lucide="log-out" class="w-4 h-4"></i> Keluar Akun</button>
                     </div>
                 </div>
+
+                <!-- WATERMARK SUBHAN -->
+                <div class="text-center mt-8 pb-4 text-xs text-gray-400 font-medium">
+                    Dipersembahkan dengan <span class="text-red-500 animate-pulse inline-block">❤️</span> oleh <span class="font-bold text-gray-600 text-[13px] tracking-wide">Subhan</span>
+                </div>
             </div>
-            
         </div>
         
         <!-- BOTTOM NAVIGATION -->
@@ -268,7 +268,6 @@
         </div>
 
         <!-- ================= MODALS ================= -->
-        
         <!-- General Category/Bank Modal -->
         <div id="modal-general" class="modal absolute inset-0 bg-black/60 z-50 items-center justify-center p-4 backdrop-blur-sm">
             <div class="bg-white w-full max-w-sm rounded-2xl p-5 shadow-2xl animate-fade-in-up" onclick="event.stopPropagation()">
@@ -317,9 +316,7 @@
         <div id="modal-edit" class="modal absolute inset-0 bg-black/60 z-50 items-center justify-center p-4 backdrop-blur-sm">
             <div class="bg-white w-full max-w-sm rounded-2xl p-5 shadow-2xl animate-fade-in-up" onclick="event.stopPropagation()">
                 <div class="flex justify-between items-center mb-4 pb-2 border-b border-gray-100 uppercase font-bold text-sm tracking-tight"><span class="flex items-center gap-2"><i data-lucide="edit-2" class="w-4 h-4 text-indigo-600"></i> Edit Transaksi</span><button onclick="closeModal('modal-edit')" class="p-1 hover:bg-gray-100 rounded-full transition"><i data-lucide="x" class="w-5 h-5"></i></button></div>
-                <div class="space-y-4" id="edit-form-content">
-                    <!-- Populated via JS -->
-                </div>
+                <div class="space-y-4" id="edit-form-content"></div>
                 <div class="flex gap-2 pt-4">
                     <button id="btn-del-tx" class="flex-1 py-2.5 bg-red-50 text-red-600 rounded-lg text-xs font-bold uppercase transition active:scale-95 border border-red-100">Hapus</button>
                     <button id="btn-del-tx-confirm" class="hidden flex-1 py-2.5 bg-red-600 text-white rounded-lg text-xs font-bold uppercase transition active:scale-95 shadow-md">Yakin?</button>
@@ -355,10 +352,12 @@
 
         // --- GLOBAL STATE ---
         let state = {
+            currentUserEmail: null,
+            
             transactions: [],
-            categoriesExpense: ['Makanan', 'Transportasi', 'Belanja', 'Tagihan', 'Hiburan', 'Kesehatan', 'Lainnya'],
-            categoriesIncome: ['Gaji', 'Bonus', 'Investasi', 'Pemberian', 'Penjualan', 'Lainnya'],
-            banks: [{ name: 'Tunai', icon: 'banknote' }, { name: 'BCA', icon: 'landmark' }, { name: 'E-Wallet', icon: 'smartphone' }],
+            categoriesExpense: [],
+            categoriesIncome: [],
+            banks: [],
             userProfile: { name: 'Pengguna', email: '', phone: '' },
             
             activeTab: 'home',
@@ -369,19 +368,13 @@
             recapFilter: 'monthly',
             currentRecapDate: new Date(),
             
-            // Form State
             formData: { type: 'expense', debtType: 'in', isReceivable: false, image: '' },
             
-            // Modal States
-            modalConfigType: '',
-            newBankIcon: 'banknote',
+            modalConfigType: '', newBankIcon: 'banknote',
             adjustBank: '', adjustCurrentBal: 0,
-            repayTx: null,
-            editTxId: null,
+            repayTx: null, editTxId: null,
             
-            // Firebase
-            firebaseUser: null,
-            db: null,
+            firebaseUser: null, db: null,
             appId: typeof __app_id !== 'undefined' ? __app_id : 'default-app-id'
         };
 
@@ -421,10 +414,31 @@
             return acc;
         }, 0);
 
+        // --- STORAGE LOGIC (1 EMAIL = 1 DATA) ---
+        const getKey = (baseKey) => state.currentUserEmail ? `${baseKey}_${state.currentUserEmail}` : `${baseKey}_local`;
+        const saveLocal = (key, val) => localStorage.setItem(getKey(key), JSON.stringify(val));
+        
+        const loadLocalData = () => {
+            const tx = localStorage.getItem(getKey('local_transactions'));
+            state.transactions = tx ? JSON.parse(tx) : [];
+
+            const exp = localStorage.getItem(getKey('local_categories_expense'));
+            state.categoriesExpense = exp ? JSON.parse(exp) : ['Makanan', 'Transportasi', 'Belanja', 'Tagihan', 'Hiburan', 'Kesehatan', 'Lainnya'];
+
+            const inc = localStorage.getItem(getKey('local_categories_income'));
+            state.categoriesIncome = inc ? JSON.parse(inc) : ['Gaji', 'Bonus', 'Investasi', 'Pemberian', 'Penjualan', 'Lainnya'];
+
+            const b = localStorage.getItem(getKey('local_banks'));
+            state.banks = b ? JSON.parse(b) : [{ name: 'Tunai', icon: 'banknote' }, { name: 'BCA', icon: 'landmark' }, { name: 'E-Wallet', icon: 'smartphone' }];
+
+            const prof = localStorage.getItem(getKey('local_user_profile'));
+            state.userProfile = prof ? JSON.parse(prof) : { name: '', email: state.currentUserEmail || '', phone: '' };
+        };
+
         // --- FIREBASE INIT ---
         const initFirebase = async () => {
             const configStr = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
-            if (!configStr) { finishLoading(false); return; }
+            if (!configStr) return;
             
             try {
                 const config = JSON.parse(configStr);
@@ -440,16 +454,24 @@
 
                 onAuthStateChanged(auth, (user) => {
                     state.firebaseUser = user;
-                    if (user) setupRealtimeListeners(user.uid);
-                    else finishLoading(false);
+                    if (user && state.currentUserEmail) {
+                        attachCloudListeners(); // Sambungkan cloud jika user sdh login akun lokal
+                    }
                 });
-            } catch (e) { console.error("Firebase error", e); finishLoading(false); }
+            } catch (e) { console.error("Firebase error", e); }
         };
 
         let unsubSettings = null, unsubTxs = null;
-        const setupRealtimeListeners = (uid) => {
-            // Settings
-            unsubSettings = onSnapshot(doc(state.db, 'artifacts', state.appId, 'users', uid, 'settings', 'config'), (docSnap) => {
+        const attachCloudListeners = () => {
+            if (!state.firebaseUser || !state.db || !state.currentUserEmail) return;
+            const uid = state.firebaseUser.uid;
+            
+            // Format ID untuk Email
+            const emailDocId = `config_${state.currentUserEmail.replace(/[^a-zA-Z0-9]/g, '_')}`;
+
+            // Settings Listeners
+            if (unsubSettings) unsubSettings();
+            unsubSettings = onSnapshot(doc(state.db, 'artifacts', state.appId, 'users', uid, 'settings', emailDocId), (docSnap) => {
                 if (docSnap.exists()) {
                     const data = docSnap.data();
                     if(data.categoriesExpense) state.categoriesExpense = data.categoriesExpense;
@@ -457,69 +479,57 @@
                     if(data.banks) state.banks = data.banks;
                     if(data.userProfile) state.userProfile = data.userProfile;
                 }
-                finishLoading(true);
                 renderAll();
-            }, (e) => { console.error(e); finishLoading(false); });
+            });
 
-            // Transactions
+            // Transactions Listeners
+            if (unsubTxs) unsubTxs();
             unsubTxs = onSnapshot(collection(state.db, 'artifacts', state.appId, 'users', uid, 'transactions'), (snap) => {
                 let txs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                // Filter hanya data milik email ini
+                txs = txs.filter(t => t.accountEmail === state.currentUserEmail);
                 txs.sort((a, b) => b.createdAt - a.createdAt);
+                
                 state.transactions = txs;
                 saveLocal('local_transactions', txs);
                 renderAll();
-            }, e => console.error(e));
+            });
+
+            document.getElementById('sync-status').textContent = 'Online';
         };
 
-        const finishLoading = (isOnline) => {
-            document.getElementById('loading-screen').classList.add('opacity-0', 'pointer-events-none');
-            setTimeout(() => document.getElementById('loading-screen').style.display = 'none', 500);
+        // --- SAVE TO CLOUD OR LOCAL HELPER ---
+        const saveToCloudOrLocal = async (collectionName, docId, data) => {
+            if (collectionName === 'transactions') {
+                data.accountEmail = state.currentUserEmail || 'local'; // Tambahkan tag kepemilikan email
+                const idx = state.transactions.findIndex(t => t.id === docId);
+                if(idx >= 0) state.transactions[idx] = data; else state.transactions.unshift(data);
+                saveLocal('local_transactions', state.transactions);
+            } else if (collectionName === 'settings') {
+                saveLocal('local_categories_expense', state.categoriesExpense);
+                saveLocal('local_categories_income', state.categoriesIncome);
+                saveLocal('local_banks', state.banks);
+                saveLocal('local_user_profile', state.userProfile);
+            }
             
-            document.getElementById('sync-status').textContent = isOnline ? 'Online' : 'Local';
-            if(!isOnline) loadLocalData();
-            document.getElementById('sec-text').textContent = isOnline ? 'Tersinkronisasi ke Cloud' : 'Data Lokal (Tanpa Cloud)';
+            if (state.firebaseUser && state.db && state.currentUserEmail) {
+                if (collectionName === 'settings') {
+                    docId = `config_${state.currentUserEmail.replace(/[^a-zA-Z0-9]/g, '_')}`;
+                }
+                await setDoc(doc(state.db, 'artifacts', state.appId, 'users', state.firebaseUser.uid, collectionName, docId), data, {merge: true});
+            }
             renderAll();
         };
 
-        const saveToCloudOrLocal = async (collectionName, docId, data) => {
-            if (state.firebaseUser && state.db) {
-                await setDoc(doc(state.db, 'artifacts', state.appId, 'users', state.firebaseUser.uid, collectionName, docId), data, {merge: true});
-            } else {
-                if (collectionName === 'transactions') {
-                    const idx = state.transactions.findIndex(t => t.id === docId);
-                    if(idx >= 0) state.transactions[idx] = data; else state.transactions.unshift(data);
-                    saveLocal('local_transactions', state.transactions);
-                } else if (collectionName === 'settings') {
-                    // Save specific fields locally (Handled di fungsi masing-masing)
-                }
-                renderAll();
-            }
-        };
-
         const deleteFromCloudOrLocal = async (docId) => {
-            if (state.firebaseUser && state.db) {
+            state.transactions = state.transactions.filter(t => t.id !== docId);
+            saveLocal('local_transactions', state.transactions);
+            
+            if (state.firebaseUser && state.db && state.currentUserEmail) {
                 await deleteDoc(doc(state.db, 'artifacts', state.appId, 'users', state.firebaseUser.uid, 'transactions', docId));
-            } else {
-                state.transactions = state.transactions.filter(t => t.id !== docId);
-                saveLocal('local_transactions', state.transactions);
-                renderAll();
             }
+            renderAll();
         };
-
-        // --- LOCAL STORAGE ---
-        const loadLocalData = () => {
-            const tx = localStorage.getItem('local_transactions');
-            if(tx) state.transactions = JSON.parse(tx);
-            const exp = localStorage.getItem('local_categories_expense');
-            if(exp) state.categoriesExpense = JSON.parse(exp);
-            const inc = localStorage.getItem('local_categories_income');
-            if(inc) state.categoriesIncome = JSON.parse(inc);
-            const b = localStorage.getItem('local_banks');
-            if(b) state.banks = JSON.parse(b);
-            const prof = localStorage.getItem('local_user_profile');
-            if(prof) state.userProfile = JSON.parse(prof);
-        };
-        const saveLocal = (key, val) => localStorage.setItem(key, JSON.stringify(val));
 
         // --- RENDER FUNCTIONS ---
         window.switchTab = (tabId) => {
@@ -565,7 +575,6 @@
             const container = document.getElementById('form-dynamic-fields');
             let html = '';
             const t = state.formData.type;
-
             const bankOptions = state.banks.map(b => `<option value="${b.name}">${b.name}</option>`).join('');
 
             if (t === 'transfer') {
@@ -593,10 +602,7 @@
                 html = `
                     <div class="animate-fade-in">
                         <label class="text-[10px] font-bold text-gray-400 uppercase mb-1 block">${isDebt ? 'Nama Orang' : 'Kategori'}</label>
-                        ${isDebt ? 
-                            `<input type="text" id="tx-category" class="w-full p-2.5 text-xs border rounded-lg outline-none focus:border-indigo-500" placeholder="Nama..." />` : 
-                            `<select id="tx-category" class="w-full p-2.5 text-xs border rounded-lg outline-none focus:border-indigo-500">${catOptions}</select>`
-                        }
+                        ${isDebt ? `<input type="text" id="tx-category" class="w-full p-2.5 text-xs border rounded-lg outline-none focus:border-indigo-500" placeholder="Nama..." />` : `<select id="tx-category" class="w-full p-2.5 text-xs border rounded-lg outline-none focus:border-indigo-500">${catOptions}</select>`}
                     </div>
                     <div class="animate-fade-in">
                         <label class="text-[10px] font-bold text-gray-400 uppercase flex justify-between mb-1">
@@ -609,18 +615,11 @@
                     </div>
                 `;
                 
-                if(isDebt) {
-                    document.getElementById('debt-toggles').classList.remove('hidden');
-                    document.getElementById('toggle-debt-mode').classList.add('hidden');
-                    updateDebtToggleUI();
-                } else {
-                    document.getElementById('debt-toggles').classList.add('hidden');
-                    document.getElementById('toggle-debt-mode').classList.remove('hidden');
-                }
+                if(isDebt) { document.getElementById('debt-toggles').classList.remove('hidden'); document.getElementById('toggle-debt-mode').classList.add('hidden'); updateDebtToggleUI(); } 
+                else { document.getElementById('debt-toggles').classList.add('hidden'); document.getElementById('toggle-debt-mode').classList.remove('hidden'); }
             }
             container.innerHTML = html;
             
-            // Attach balance listeners
             const b1 = document.getElementById('tx-bank');
             const b2 = document.getElementById('tx-toBank');
             const updateBals = () => {
@@ -639,27 +638,15 @@
 
         const updateDebtToggleUI = () => {
             const fd = state.formData;
-            const btnMe = document.getElementById('btn-debt-me');
-            const btnRec = document.getElementById('btn-receivable-me');
-            const btnNew = document.getElementById('btn-debt-new');
-            const btnPay = document.getElementById('btn-debt-pay');
+            const btnMe = document.getElementById('btn-debt-me'); const btnRec = document.getElementById('btn-receivable-me');
+            const btnNew = document.getElementById('btn-debt-new'); const btnPay = document.getElementById('btn-debt-pay');
 
-            if (!fd.isReceivable) {
-                btnMe.className = "flex-1 py-1 text-[10px] rounded border bg-orange-500 border-orange-600 text-white font-bold transition";
-                btnRec.className = "flex-1 py-1 text-[10px] rounded border bg-white text-gray-400 transition";
-            } else {
-                btnRec.className = "flex-1 py-1 text-[10px] rounded border bg-purple-600 border-purple-700 text-white font-bold transition";
-                btnMe.className = "flex-1 py-1 text-[10px] rounded border bg-white text-gray-400 transition";
-            }
+            if (!fd.isReceivable) { btnMe.className = "flex-1 py-1 text-[10px] rounded border bg-orange-500 border-orange-600 text-white font-bold transition"; btnRec.className = "flex-1 py-1 text-[10px] rounded border bg-white text-gray-400 transition"; } 
+            else { btnRec.className = "flex-1 py-1 text-[10px] rounded border bg-purple-600 border-purple-700 text-white font-bold transition"; btnMe.className = "flex-1 py-1 text-[10px] rounded border bg-white text-gray-400 transition"; }
 
             const isNew = fd.debtType === (fd.isReceivable ? 'out' : 'in');
-            if (isNew) {
-                btnNew.className = "flex-1 py-1.5 text-[10px] font-bold rounded bg-gray-800 text-white transition";
-                btnPay.className = "flex-1 py-1.5 text-[10px] font-bold rounded bg-white text-gray-400 border transition";
-            } else {
-                btnPay.className = "flex-1 py-1.5 text-[10px] font-bold rounded bg-gray-800 text-white transition";
-                btnNew.className = "flex-1 py-1.5 text-[10px] font-bold rounded bg-white text-gray-400 border transition";
-            }
+            if (isNew) { btnNew.className = "flex-1 py-1.5 text-[10px] font-bold rounded bg-gray-800 text-white transition"; btnPay.className = "flex-1 py-1.5 text-[10px] font-bold rounded bg-white text-gray-400 border transition"; } 
+            else { btnPay.className = "flex-1 py-1.5 text-[10px] font-bold rounded bg-gray-800 text-white transition"; btnNew.className = "flex-1 py-1.5 text-[10px] font-bold rounded bg-white text-gray-400 border transition"; }
         };
 
         const renderActiveDebts = () => {
@@ -667,30 +654,22 @@
             let html = '';
             
             const debts = {};
-            state.transactions.filter(t => t.type === 'debt' && !t.isReceivable).forEach(t => {
-                debts[t.category] = (debts[t.category] || 0) + (t.debtType === 'in' ? Number(t.nominal) : -Number(t.nominal));
-            });
+            state.transactions.filter(t => t.type === 'debt' && !t.isReceivable).forEach(t => { debts[t.category] = (debts[t.category] || 0) + (t.debtType === 'in' ? Number(t.nominal) : -Number(t.nominal)); });
             const debtsList = Object.entries(debts).filter(([,v]) => v > 0);
 
             const recs = {};
-            state.transactions.filter(t => t.type === 'debt' && t.isReceivable).forEach(t => {
-                recs[t.category] = (recs[t.category] || 0) + (t.debtType === 'out' ? Number(t.nominal) : -Number(t.nominal));
-            });
+            state.transactions.filter(t => t.type === 'debt' && t.isReceivable).forEach(t => { recs[t.category] = (recs[t.category] || 0) + (t.debtType === 'out' ? Number(t.nominal) : -Number(t.nominal)); });
             const recsList = Object.entries(recs).filter(([,v]) => v > 0);
 
             if(debtsList.length > 0) {
                 html += `<div class="bg-orange-50 p-4 rounded-xl border border-orange-200 shadow-sm animate-fade-in"><h3 class="text-xs font-bold text-orange-800 mb-2 uppercase">Hutang Belum Lunas</h3>`;
-                debtsList.forEach(([n,v]) => {
-                    html += `<div class="flex justify-between items-center mb-1 text-xs"><span>${n}</span><div class="flex items-center gap-2"><span class="font-bold text-orange-600">${formatRupiah(v)}</span><button onclick="openRepayModal('${n}', ${v}, false)" class="px-2 py-1 bg-orange-500 text-white rounded font-bold transition active:scale-95">Bayar</button></div></div>`;
-                });
+                debtsList.forEach(([n,v]) => { html += `<div class="flex justify-between items-center mb-1 text-xs"><span>${n}</span><div class="flex items-center gap-2"><span class="font-bold text-orange-600">${formatRupiah(v)}</span><button onclick="openRepayModal('${n}', ${v}, false)" class="px-2 py-1 bg-orange-500 text-white rounded font-bold transition active:scale-95">Bayar</button></div></div>`; });
                 html += `</div>`;
             }
 
             if(recsList.length > 0) {
                 html += `<div class="bg-purple-50 p-4 rounded-xl border border-purple-200 shadow-sm animate-fade-in"><h3 class="text-xs font-bold text-purple-800 mb-2 uppercase">Piutang (Uang di Luar)</h3>`;
-                recsList.forEach(([n,v]) => {
-                    html += `<div class="flex justify-between items-center mb-1 text-xs"><span>${n}</span><div class="flex items-center gap-2"><span class="font-bold text-purple-600">${formatRupiah(v)}</span><button onclick="openRepayModal('${n}', ${v}, true)" class="px-2 py-1 bg-purple-500 text-white rounded font-bold transition active:scale-95">Terima</button></div></div>`;
-                });
+                recsList.forEach(([n,v]) => { html += `<div class="flex justify-between items-center mb-1 text-xs"><span>${n}</span><div class="flex items-center gap-2"><span class="font-bold text-purple-600">${formatRupiah(v)}</span><button onclick="openRepayModal('${n}', ${v}, true)" class="px-2 py-1 bg-purple-500 text-white rounded font-bold transition active:scale-95">Terima</button></div></div>`; });
                 html += `</div>`;
             }
             container.innerHTML = html;
@@ -704,9 +683,7 @@
             }
 
             let filtered = state.transactions;
-            if (state.historyBankFilter !== 'All') {
-                filtered = filtered.filter(tx => tx.bank === state.historyBankFilter || (tx.type === 'transfer' && tx.toBank === state.historyBankFilter));
-            }
+            if (state.historyBankFilter !== 'All') { filtered = filtered.filter(tx => tx.bank === state.historyBankFilter || (tx.type === 'transfer' && tx.toBank === state.historyBankFilter)); }
             const displayTx = state.showAllHistory ? filtered : filtered.slice(0, 5);
 
             document.getElementById('text-toggle-history').textContent = state.showAllHistory ? 'Tutup' : 'Semua';
@@ -722,11 +699,8 @@
                 return `<i data-lucide="credit-card" class="w-5 h-5 text-gray-500"></i>`;
             };
             const getBg = (t) => {
-                if(t.type === 'income') return 'bg-green-100';
-                if(t.type === 'expense') return 'bg-red-100';
-                if(t.type === 'transfer') return 'bg-blue-100';
-                if(t.type === 'debt') return t.isReceivable ? 'bg-purple-100' : 'bg-orange-100';
-                return 'bg-gray-100';
+                if(t.type === 'income') return 'bg-green-100'; if(t.type === 'expense') return 'bg-red-100'; if(t.type === 'transfer') return 'bg-blue-100';
+                if(t.type === 'debt') return t.isReceivable ? 'bg-purple-100' : 'bg-orange-100'; return 'bg-gray-100';
             };
 
             document.getElementById('history-list').innerHTML = displayTx.map(tx => `
@@ -736,8 +710,7 @@
                         <div>
                             <p class="text-xs font-bold text-gray-800">${tx.type==='transfer'?`${tx.bank} ➔ ${tx.toBank}`:tx.category}</p>
                             <div class="flex gap-1 text-[10px] text-gray-400 items-center">
-                                <span>${tx.date}</span>
-                                ${tx.proof ? `<span>• ${tx.proof}</span>` : ''}
+                                <span>${tx.date}</span> ${tx.proof ? `<span>• ${tx.proof}</span>` : ''}
                                 ${tx.image ? `<i data-lucide="image" class="w-3 h-3 text-indigo-500 cursor-pointer ml-1" onclick="openImageViewer('${tx.image}')"></i>` : ''}
                             </div>
                         </div>
@@ -766,21 +739,17 @@
 
         // --- RENDER RECAP ---
         const renderRecap = () => {
-            // Update filter buttons
             document.querySelectorAll('.recap-filter-btn').forEach(b => {
                 if(b.dataset.filter === state.recapFilter) b.className = "recap-filter-btn flex-1 py-2 text-xs font-bold rounded-lg capitalize transition bg-indigo-100 text-indigo-700";
                 else b.className = "recap-filter-btn flex-1 py-2 text-xs font-bold rounded-lg capitalize transition text-gray-400";
             });
 
-            // Date Label
-            const d = state.currentRecapDate;
-            let label = '';
+            const d = state.currentRecapDate; let label = '';
             if(state.recapFilter === 'daily') label = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
             else if(state.recapFilter === 'monthly') label = d.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
             else label = d.getFullYear().toString();
             document.getElementById('recap-date-label').textContent = label;
 
-            // Calculations
             const fRecap = state.transactions.filter(tx => { 
                 const td = new Date(tx.date); 
                 if(state.recapFilter === 'daily') return td.toDateString() === d.toDateString(); 
@@ -795,58 +764,91 @@
             document.getElementById('recap-total-in').textContent = formatRupiah(totalIn);
             document.getElementById('recap-total-out').textContent = formatRupiah(totalOut);
             const elNet = document.getElementById('recap-net');
-            elNet.textContent = formatRupiah(net);
-            elNet.className = `text-lg font-bold ${net >= 0 ? 'text-blue-700' : 'text-red-600'}`;
+            elNet.textContent = formatRupiah(net); elNet.className = `text-lg font-bold ${net >= 0 ? 'text-blue-700' : 'text-red-600'}`;
 
-            // Chart
             const expByCat = fRecap.filter(t => getTxAmount(t)<0).reduce((a,c) => { a[c.category] = (a[c.category]||0) + Number(c.nominal); return a; }, {});
             const sortedExp = Object.entries(expByCat).sort(([,a],[,b]) => b-a).slice(0,8);
             const totalChart = sortedExp.reduce((a,[,v]) => a+v, 0);
             
             const cCont = document.getElementById('chart-container');
             if(totalChart > 0) {
-                let currentOffset = 0;
-                let circles = '';
-                let legend = '';
-                
+                let currentOffset = 0; let circles = ''; let legend = '';
                 sortedExp.forEach(([cat, amount], i) => {
-                    const strokeVal = (amount/totalChart) * 251.2;
-                    const color = CHART_COLORS[i % CHART_COLORS.length];
+                    const strokeVal = (amount/totalChart) * 251.2; const color = CHART_COLORS[i % CHART_COLORS.length];
                     circles += `<circle cx="50" cy="50" r="40" fill="transparent" stroke="${color}" stroke-width="18" stroke-dasharray="${strokeVal} 251.2" stroke-dashoffset="-${currentOffset}" />`;
                     currentOffset += strokeVal;
 
-                    legend += `
-                        <div>
-                            <div class="flex justify-between text-[10px] mb-1">
-                                <div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full" style="background-color: ${color}"></div><span class="font-bold text-gray-700 uppercase tracking-tight">${cat}</span></div>
-                                <span class="font-bold text-gray-800">${formatRupiah(amount)} (${Math.round(amount/totalOut*100)}%)</span>
-                            </div>
-                            <div class="w-full bg-gray-100 h-1.5 rounded-full"><div class="h-1.5 rounded-full transition-all duration-700" style="width: ${(amount/totalOut)*100}%; background-color: ${color}"></div></div>
-                        </div>
-                    `;
+                    legend += `<div><div class="flex justify-between text-[10px] mb-1"><div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full" style="background-color: ${color}"></div><span class="font-bold text-gray-700 uppercase tracking-tight">${cat}</span></div><span class="font-bold text-gray-800">${formatRupiah(amount)} (${Math.round(amount/totalOut*100)}%)</span></div><div class="w-full bg-gray-100 h-1.5 rounded-full"><div class="h-1.5 rounded-full transition-all duration-700" style="width: ${(amount/totalOut)*100}%; background-color: ${color}"></div></div></div>`;
                 });
 
-                cCont.innerHTML = `
-                    <div class="relative w-40 h-40 mb-8">
-                        <svg viewBox="0 0 100 100" class="w-full h-full transform -rotate-90">${circles}</svg>
-                        <div class="absolute inset-0 flex items-center justify-center flex-col"><span class="text-[10px] text-gray-400 font-bold uppercase">Total Keluar</span><span class="text-xs font-bold text-gray-800">${formatRupiah(totalOut)}</span></div>
-                    </div>
-                    <div class="w-full space-y-4">${legend}</div>
-                `;
-            } else {
-                cCont.innerHTML = `<div class="text-center text-xs text-gray-400 py-10 uppercase font-bold tracking-wider">Belum ada data pengeluaran.</div>`;
-            }
+                cCont.innerHTML = `<div class="relative w-40 h-40 mb-8"><svg viewBox="0 0 100 100" class="w-full h-full transform -rotate-90">${circles}</svg><div class="absolute inset-0 flex items-center justify-center flex-col"><span class="text-[10px] text-gray-400 font-bold uppercase">Total Keluar</span><span class="text-xs font-bold text-gray-800">${formatRupiah(totalOut)}</span></div></div><div class="w-full space-y-4">${legend}</div>`;
+            } else { cCont.innerHTML = `<div class="text-center text-xs text-gray-400 py-10 uppercase font-bold tracking-wider">Belum ada data pengeluaran.</div>`; }
         };
 
         // --- RENDER PROFILE ---
         const renderProfile = () => {
-            document.getElementById('prof-name').value = state.userProfile.name || '';
-            document.getElementById('prof-email').value = state.userProfile.email || '';
-            document.getElementById('prof-phone').value = state.userProfile.phone || '';
+            if (state.currentUserEmail) {
+                document.getElementById('profile-login-section').classList.add('hidden');
+                document.getElementById('profile-auth-section').classList.remove('hidden');
+                document.getElementById('profile-auth-section').classList.add('flex');
+                document.getElementById('logout-container').classList.remove('hidden');
+                
+                document.getElementById('prof-name').value = state.userProfile.name || '';
+                document.getElementById('prof-email').value = state.userProfile.email || state.currentUserEmail;
+                document.getElementById('prof-phone').value = state.userProfile.phone || '';
+            } else {
+                document.getElementById('profile-login-section').classList.remove('hidden');
+                document.getElementById('profile-auth-section').classList.add('hidden');
+                document.getElementById('profile-auth-section').classList.remove('flex');
+                document.getElementById('logout-container').classList.add('hidden');
+            }
         };
 
         // --- EVENT LISTENERS (ATTACHED ONCE) ---
         const initEventListeners = () => {
+            
+            // --- LOGIN FORM SUBMIT ---
+            document.getElementById('settings-login-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const email = document.getElementById('settings-login-email').value.trim().toLowerCase();
+                const pass = document.getElementById('settings-login-password').value;
+                if(!email || !pass) return;
+
+                let users = JSON.parse(localStorage.getItem('app_auth_users') || '{}');
+                
+                if (users[email]) {
+                    // Cek Password
+                    if (users[email] === pass) {
+                        state.currentUserEmail = email;
+                    } else {
+                        showToast('Kata Sandi Salah!');
+                        return;
+                    }
+                } else {
+                    // Register Lokal Baru
+                    users[email] = pass;
+                    localStorage.setItem('app_auth_users', JSON.stringify(users));
+                    state.currentUserEmail = email;
+                }
+                
+                document.getElementById('settings-login-password').value = '';
+
+                loadLocalData();
+                attachCloudListeners(); // Attach if firebase is ready
+                renderAll();
+                showToast('Berhasil Masuk!');
+            });
+
+            // LOGOUT BUTTON
+            document.getElementById('btn-logout').addEventListener('click', () => {
+                state.currentUserEmail = null;
+                if(unsubTxs) unsubTxs(); if(unsubSettings) unsubSettings();
+                
+                document.getElementById('sync-status').textContent = 'Local';
+                loadLocalData();
+                renderAll();
+                showToast('Berhasil Keluar');
+            });
             
             // Profil Handle Save
             document.getElementById('btn-save-profile').addEventListener('click', async () => {
@@ -854,14 +856,10 @@
                 btn.textContent = 'Menyimpan...';
                 
                 state.userProfile.name = document.getElementById('prof-name').value;
-                state.userProfile.email = document.getElementById('prof-email').value;
                 state.userProfile.phone = document.getElementById('prof-phone').value;
                 
-                saveLocal('local_user_profile', state.userProfile); // Simpan ke Local Storage
+                await saveToCloudOrLocal('settings', 'config', { userProfile: state.userProfile });
                 
-                if (state.firebaseUser && state.db) {
-                    await setDoc(doc(state.db, 'artifacts', state.appId, 'users', state.firebaseUser.uid, 'settings', 'config'), { userProfile: state.userProfile }, {merge: true});
-                }
                 showToast('Profil Tersimpan!');
                 btn.textContent = 'Simpan Profil';
             });
@@ -969,7 +967,7 @@
             });
             document.getElementById('btn-reset-do').addEventListener('click', async () => {
                 document.getElementById('btn-reset-do').textContent = "...";
-                if(state.firebaseUser && state.db) {
+                if(state.firebaseUser && state.db && state.currentUserEmail) {
                     for(const tx of state.transactions) await deleteDoc(doc(state.db, 'artifacts', state.appId, 'users', state.firebaseUser.uid, 'transactions', tx.id));
                 }
                 state.transactions = []; saveLocal('local_transactions', []);
@@ -983,7 +981,7 @@
             document.getElementById('btn-backup').addEventListener('click', () => {
                 const data = { transactions: state.transactions, categoriesExpense: state.categoriesExpense, categoriesIncome: state.categoriesIncome, banks: state.banks };
                 const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
-                const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'backup.json'; a.click();
+                const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `backup_${state.currentUserEmail || 'local'}.json`; a.click();
             });
             document.getElementById('file-restore').addEventListener('change', e => {
                 const f = e.target.files[0]; if(!f) return;
@@ -996,9 +994,12 @@
                         if(d.categoriesIncome) state.categoriesIncome = d.categoriesIncome;
                         if(d.banks) state.banks = d.banks;
                         // Trigger sync
-                        if(state.firebaseUser && state.db) {
-                            for(const tx of d.transactions) await setDoc(doc(state.db, 'artifacts', state.appId, 'users', state.firebaseUser.uid, 'transactions', tx.id), tx);
-                            await setDoc(doc(state.db, 'artifacts', state.appId, 'users', state.firebaseUser.uid, 'settings', 'config'), { categoriesExpense: state.categoriesExpense, categoriesIncome: state.categoriesIncome, banks: state.banks }, {merge:true});
+                        if(state.firebaseUser && state.db && state.currentUserEmail) {
+                            for(const tx of d.transactions) {
+                                tx.accountEmail = state.currentUserEmail; 
+                                await setDoc(doc(state.db, 'artifacts', state.appId, 'users', state.firebaseUser.uid, 'transactions', tx.id), tx);
+                            }
+                            await setDoc(doc(state.db, 'artifacts', state.appId, 'users', state.firebaseUser.uid, 'settings', `config_${state.currentUserEmail.replace(/[^a-zA-Z0-9]/g, '_')}`), { categoriesExpense: state.categoriesExpense, categoriesIncome: state.categoriesIncome, banks: state.banks }, {merge:true});
                         }
                         showToast("Data Dipulihkan!"); renderAll();
                     } catch(e) { showToast("File Error!"); }
@@ -1006,6 +1007,9 @@
             });
 
             // Initial load
+            loadLocalData();
+            renderAll();
+
             initFirebase();
             setInterval(() => lucide.createIcons(), 2000); // Failsafe for icons
         };
@@ -1057,13 +1061,8 @@
             else state.banks.push({name:v, icon:state.newBankIcon});
             document.getElementById('modal-gen-input').value = '';
             
-            // SIMPAN KE LOKAL
-            saveLocal('local_categories_expense', state.categoriesExpense);
-            saveLocal('local_categories_income', state.categoriesIncome);
-            saveLocal('local_banks', state.banks);
-
-            if(state.firebaseUser && state.db) await setDoc(doc(state.db, 'artifacts', state.appId, 'users', state.firebaseUser.uid, 'settings', 'config'), { categoriesExpense: state.categoriesExpense, categoriesIncome: state.categoriesIncome, banks: state.banks }, {merge:true});
-            openModalGeneral(t); renderAll();
+            await saveToCloudOrLocal('settings', 'config', { categoriesExpense: state.categoriesExpense, categoriesIncome: state.categoriesIncome, banks: state.banks });
+            openModalGeneral(t);
         });
 
         window.removeGenItem = async (idx) => {
@@ -1072,13 +1071,8 @@
             else if(t==='category_income' && state.categoriesIncome.length>1) state.categoriesIncome.splice(idx,1);
             else if(t==='bank' && state.banks.length>1) state.banks.splice(idx,1);
             
-            // SIMPAN KE LOKAL
-            saveLocal('local_categories_expense', state.categoriesExpense);
-            saveLocal('local_categories_income', state.categoriesIncome);
-            saveLocal('local_banks', state.banks);
-
-            if(state.firebaseUser && state.db) await setDoc(doc(state.db, 'artifacts', state.appId, 'users', state.firebaseUser.uid, 'settings', 'config'), { categoriesExpense: state.categoriesExpense, categoriesIncome: state.categoriesIncome, banks: state.banks }, {merge:true});
-            openModalGeneral(t); renderAll();
+            await saveToCloudOrLocal('settings', 'config', { categoriesExpense: state.categoriesExpense, categoriesIncome: state.categoriesIncome, banks: state.banks });
+            openModalGeneral(t);
         };
 
         window.openAdjustModal = (bank, bal) => {
@@ -1086,9 +1080,6 @@
             document.getElementById('modal-adjust-title').textContent = `Set Saldo: ${bank}`;
             document.getElementById('input-adjust').value = formatThousand(bal);
             document.getElementById('modal-adjust').classList.add('show');
-            
-            // Need re-attachment to prevent duplicates? Better replace clone or carefully manage.
-            // Using standard assignment.
         };
         const inpAdj = document.getElementById('input-adjust');
         inpAdj.addEventListener('input', e => inpAdj.value = formatThousand(e.target.value));
