@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Keuangan Minimalis</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Custom Styles -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .animate-fade-in { animation: fadeIn 0.3s ease-out; }
+        .animate-fade-in-up { animation: fadeInUp 0.4s ease-out; }
+        .animate-fade-in-down { animation: fadeInDown 0.4s ease-out; }
+        .animate-pulse-fast { animation: pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .tab-btn.active { color: #4f46e5; background-color: #e0e7ff; font-weight: 700; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
+        .tab-btn { color: #9ca3af; transition: all 0.2s ease-in-out; }
+        
+        /* Modal Overlay Transition */
+        .modal { display: none !important; }
+        .modal.show { display: flex !important; animation: fadeIn 0.2s ease-out; }
+    </style>
+</head>
+<body class="min-h-screen flex justify-center text-gray-800 antialiased">
+
+    <!-- CLOUD LOADING SCREEN -->
+    <div id="loading-screen" class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-indigo-600 text-white p-6 transition-opacity duration-500">
+        <i data-lucide="loader-2" class="animate-spin mb-4 w-10 h-10"></i>
+        <p class="font-bold tracking-widest text-sm uppercase">Menghubungkan Cloud...</p>
+    </div>
+
+    <!-- MAIN APP CONTAINER -->
+    <div class="w-full max-w-md bg-white shadow-2xl relative flex flex-col h-[100dvh] sm:h-[90vh] sm:rounded-3xl sm:mt-5 overflow-hidden border-gray-200 sm:border">
+        
+        <!-- HEADER -->
+        <div class="bg-indigo-600 p-4 text-white flex justify-between items-center z-10 shadow-md shrink-0">
+            <div class="flex items-center gap-2">
+                <i data-lucide="wallet" class="text-indigo-200 w-5 h-5"></i>
+                <h1 class="font-bold tracking-widest text-sm uppercase">Keuangan Saya</h1>
+            </div>
+            <div class="text-[10px] bg-indigo-500/50 px-2 py-1 rounded-full flex items-center gap-1 font-medium">
+                <i data-lucide="cloud-upload" id="sync-icon" class="w-3 h-3"></i>
+                <span id="sync-status">Local</span>
+            </div>
+        </div>
+
+        <!-- TOAST NOTIFICATION -->
+        <div id="toast" class="hidden absolute top-16 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-[10px] font-bold px-4 py-2 rounded-full shadow-lg z-50 uppercase tracking-widest text-center min-w-[150px] animate-fade-in-down">
+            Pesan Notifikasi
+        </div>
+
+        <!-- CONTENT AREA -->
+        <div class="flex-1 overflow-y-auto no-scrollbar bg-gray-50 relative" id="main-content">
+            
+            <!-- 1. TAB: HOME -->
+            <div id="tab-home" class="tab-content p-6 pb-24 space-y-6 animate-fade-in">
+                <!-- Saldo Card -->
+                <div class="bg-gradient-to-r from-indigo-600 to-blue-600 rounded-2xl p-5 text-white shadow-lg relative">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-blue-100 text-xs font-bold uppercase tracking-tight">Total Saldo Aktif</p>
+                            <h2 id="total-balance" class="text-3xl font-bold tracking-tight">Rp ••••••••</h2>
+                        </div>
+                        <button id="toggle-balance-home" class="p-2 bg-white/20 rounded-full active:scale-95 transition">
+                            <i data-lucide="eye" id="eye-icon-home" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Form Transaksi -->
+                <form id="tx-form" class="flex flex-col gap-4 bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+                    <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider">Catat Keuangan</h3>
+                    
+                    <div class="bg-gray-100 p-1 rounded-xl flex" id="tx-type-selector">
+                        <label class="flex-1 text-center cursor-pointer">
+                            <input type="radio" name="txType" value="expense" class="peer hidden" checked>
+                            <div class="py-2 rounded-lg text-xs font-bold transition capitalize peer-checked:bg-white peer-checked:shadow-sm text-gray-400 peer-checked:text-gray-800">Keluar</div>
+                        </label>
+                        <label class="flex-1 text-center cursor-pointer">
+                            <input type="radio" name="txType" value="income" class="peer hidden">
+                            <div class="py-2 rounded-lg text-xs font-bold transition capitalize peer-checked:bg-white peer-checked:shadow-sm text-gray-400 peer-checked:text-gray-800">Masuk</div>
+                        </label>
+                        <label class="flex-1 text-center cursor-pointer">
+                            <input type="radio" name="txType" value="transfer" class="peer hidden">
+                            <div class="py-2 rounded-lg text-xs font-bold transition capitalize peer-checked:bg-white peer-checked:shadow-sm text-gray-400 peer-checked:text-gray-800">Pindah</div>
+                        </label>
+                    </div>
+                    
+                    <input type="date" id="tx-date" required class="w-full p-2.5 text-xs font-medium border rounded-lg outline-none focus:border-indigo-500" />
+                    
+                    <!-- Dinamis Form Container -->
+                    <div id="form-dynamic-fields" class="grid grid-cols-2 gap-3">
+                        <!-- Diisi via JS -->
+                    </div>
+
+                    <!-- Debt Toggles (Hidden by default) -->
+                    <div id="debt-toggles" class="hidden p-3 bg-indigo-50/50 rounded-xl border border-indigo-100 animate-fade-in">
+                        <div class="flex gap-2 mb-2">
+                            <button type="button" id="btn-debt-me" class="flex-1 py-1 text-[10px] rounded border bg-orange-500 border-orange-600 text-white font-bold transition">Hutang Saya</button>
+                            <button type="button" id="btn-receivable-me" class="flex-1 py-1 text-[10px] rounded border bg-white text-gray-400 transition">Piutang Saya</button>
+                        </div>
+                        <div class="flex gap-2">
+                            <button type="button" id="btn-debt-new" class="flex-1 py-1.5 text-[10px] font-bold rounded bg-gray-800 text-white transition">Baru / Nambah</button>
+                            <button type="button" id="btn-debt-pay" class="flex-1 py-1.5 text-[10px] font-bold rounded bg-white text-gray-400 border transition">Bayar / Kurang</button>
+                        </div>
+                    </div>
+
+                    <input type="text" inputmode="numeric" id="tx-nominal" required class="w-full p-3 text-lg font-bold border rounded-lg outline-none focus:border-indigo-500" placeholder="0" />
+                    
+                    <div class="flex gap-2">
+                        <input type="text" id="tx-proof" class="flex-1 p-2 text-xs border rounded-lg outline-none focus:border-indigo-500" placeholder="Catatan opsional..." />
+                        <label class="w-10 flex items-center justify-center border rounded-lg bg-gray-50 cursor-pointer hover:bg-gray-100 transition">
+                            <i data-lucide="camera" class="w-4 h-4"></i>
+                            <input type="file" id="tx-image" accept="image/*" class="hidden"/>
+                        </label>
+                    </div>
+                    <img id="tx-image-preview" class="hidden w-16 h-16 rounded-lg object-cover border" />
+                    
+                    <button type="submit" id="btn-submit-tx" class="w-full py-3 bg-indigo-600 text-white font-bold rounded-xl active:scale-95 transition shadow-lg shadow-indigo-100 uppercase tracking-wider">Simpan Transaksi</button>
+                    
+                    <p id="toggle-debt-mode" class="text-center text-[10px] text-gray-400 underline cursor-pointer mt-1 font-bold">Catat Hutang / Piutang</p>
+                </form>
+
+                <!-- Active Debts/Receivables -->
+                <div id="active-debts-container" class="space-y-4"></div>
+
+                <!-- History -->
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Riwayat</h3>
+                        <div class="flex items-center gap-2">
+                            <select id="history-bank-filter" class="text-[10px] border rounded p-1 font-bold outline-none">
+                                <option value="All">Semua Dompet</option>
+                            </select>
+                            <button id="btn-toggle-history" class="text-[10px] text-indigo-600 font-bold active:scale-95 flex items-center">
+                                <i data-lucide="list" class="w-3 h-3 mr-1"></i> <span id="text-toggle-history">Semua</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="history-list" class="space-y-2">
+                        <!-- History items via JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. TAB: WALLET -->
+            <div id="tab-wallet" class="tab-content hidden p-6 pb-24 space-y-5 animate-fade-in">
+                <div class="bg-gray-800 text-white p-5 rounded-2xl shadow-xl flex justify-between items-start">
+                    <div>
+                        <p class="text-gray-400 text-xs font-medium mb-1 uppercase tracking-wider">Aset Bersih</p>
+                        <h1 id="wallet-total-balance" class="text-3xl font-bold tracking-tight">Rp ••••••</h1>
+                    </div>
+                    <button id="toggle-balance-wallet"><i data-lucide="eye" id="eye-icon-wallet" class="w-5 h-5"></i></button>
+                </div>
+                <div class="grid gap-3">
+                    <h3 class="text-sm font-bold text-gray-600 uppercase flex items-center gap-2 tracking-wider">
+                        <i data-lucide="wallet" class="w-4 h-4 text-indigo-600"></i> Rincian Dompet
+                    </h3>
+                    <div id="wallet-list" class="grid gap-3">
+                        <!-- Wallets via JS -->
+                    </div>
+                    <p class="text-center text-[10px] text-gray-400 mt-4 italic font-medium">Ketuk 2x pada dompet untuk mengatur saldo manual.</p>
+                </div>
+            </div>
+
+            <!-- 3. TAB: RECAP -->
+            <div id="tab-recap" class="tab-content hidden p-6 pb-24 space-y-6 animate-fade-in">
+                <div class="flex bg-white p-1 rounded-xl shadow-sm border border-gray-100" id="recap-filters">
+                    <button data-filter="daily" class="recap-filter-btn flex-1 py-2 text-xs font-bold rounded-lg capitalize transition bg-indigo-100 text-indigo-700">Harian</button>
+                    <button data-filter="monthly" class="recap-filter-btn flex-1 py-2 text-xs font-bold rounded-lg capitalize transition text-gray-400">Bulanan</button>
+                    <button data-filter="yearly" class="recap-filter-btn flex-1 py-2 text-xs font-bold rounded-lg capitalize transition text-gray-400">Tahunan</button>
+                </div>
+                <div class="flex justify-between items-center bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
+                    <button id="recap-prev" class="p-1"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+                    <span id="recap-date-label" class="text-sm font-bold text-gray-700"></span>
+                    <button id="recap-next" class="p-1"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-green-50 p-4 rounded-xl border border-green-100 shadow-sm">
+                        <p class="text-xs text-green-600 font-bold uppercase">Masuk</p>
+                        <p id="recap-total-in" class="text-lg font-bold text-green-700">Rp 0</p>
+                    </div>
+                    <div class="bg-red-50 p-4 rounded-xl border border-red-100 shadow-sm">
+                        <p class="text-xs text-red-600 font-bold uppercase">Keluar</p>
+                        <p id="recap-total-out" class="text-lg font-bold text-red-700">Rp 0</p>
+                    </div>
+                </div>
+                <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 flex justify-between items-center shadow-sm">
+                    <p class="text-xs text-blue-600 font-bold uppercase">Selisih</p>
+                    <p id="recap-net" class="text-lg font-bold text-blue-700">Rp 0</p>
+                </div>
+                
+                <div id="chart-container" class="bg-white p-6 rounded-2xl border border-gray-100 flex flex-col items-center shadow-sm">
+                    <!-- Chart via JS -->
+                </div>
+            </div>
+
+            <!-- 4. TAB: PROFILE -->
+            <div id="tab-profile" class="tab-content hidden p-6 pb-24 space-y-6 animate-fade-in">
+                <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2"><i data-lucide="settings" class="w-5 h-5 text-indigo-600"></i> Pengaturan</h2>
+                
+                <div class="bg-white p-5 rounded-2xl border border-gray-100 flex gap-4 shadow-sm">
+                    <div class="w-14 h-14 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-500 shrink-0"><i data-lucide="user" class="w-7 h-7"></i></div>
+                    <div class="flex-1 space-y-3">
+                        <div class="flex items-center gap-3 border-b border-gray-50 pb-2"><i data-lucide="user" class="w-4 h-4 text-gray-400"></i><input type="text" id="prof-name" class="flex-1 text-sm font-bold outline-none" placeholder="Nama Lengkap"/></div>
+                        <div class="flex items-center gap-3 border-b border-gray-50 pb-2"><i data-lucide="mail" class="w-4 h-4 text-gray-400"></i><input type="email" id="prof-email" class="flex-1 text-sm outline-none" placeholder="Alamat Email"/></div>
+                        <div class="flex items-center gap-3 border-b border-gray-50 pb-2"><i data-lucide="phone" class="w-4 h-4 text-gray-400"></i><input type="tel" id="prof-phone" class="flex-1 text-sm outline-none" placeholder="Nomor Handphone"/></div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl border border-gray-100 space-y-3 shadow-sm">
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Kustomisasi</h3>
+                    <button onclick="openModalGeneral('category_expense')" class="w-full flex items-center justify-between bg-red-50 p-3 rounded-xl border border-red-100 transition active:scale-95"><div class="flex items-center gap-3"><i data-lucide="trending-down" class="w-4 h-4 text-red-500"></i><span class="text-sm font-bold text-gray-700">Kategori Pengeluaran</span></div><i data-lucide="chevron-right" class="w-4 h-4 text-red-300"></i></button>
+                    <button onclick="openModalGeneral('category_income')" class="w-full flex items-center justify-between bg-green-50 p-3 rounded-xl border border-green-100 transition active:scale-95"><div class="flex items-center gap-3"><i data-lucide="trending-up" class="w-4 h-4 text-green-600"></i><span class="text-sm font-bold text-gray-700">Kategori Pemasukan</span></div><i data-lucide="chevron-right" class="w-4 h-4 text-green-300"></i></button>
+                    <button onclick="openModalGeneral('bank')" class="w-full flex items-center justify-between bg-blue-50 p-3 rounded-xl border border-blue-100 transition active:scale-95"><div class="flex items-center gap-3"><i data-lucide="building-2" class="w-4 h-4 text-indigo-600"></i><span class="text-sm font-bold text-gray-700">Kelola Dompet</span></div><i data-lucide="chevron-right" class="w-4 h-4 text-blue-300"></i></button>
+                </div>
+
+                <!-- Backup / Restore -->
+                <div class="bg-white p-5 rounded-2xl border border-gray-100 space-y-3 shadow-sm">
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Penyimpanan Data</h3>
+                    <button id="btn-backup" class="w-full flex items-center justify-center gap-2 border border-indigo-100 text-indigo-600 py-3 rounded-xl font-bold text-sm active:bg-indigo-50 transition"><i data-lucide="download" class="w-4 h-4"></i> Backup JSON</button>
+                    <label class="w-full flex items-center justify-center gap-2 text-gray-500 py-2 text-xs cursor-pointer hover:underline"><i data-lucide="upload" class="w-3 h-3"></i> Restore Data <input type="file" id="file-restore" accept=".json" class="hidden" /></label>
+                    <div class="pt-2 border-t border-gray-100 mt-2" id="reset-container">
+                        <button id="btn-reset-req" class="w-full flex items-center justify-center gap-2 border border-red-100 text-red-600 py-3 rounded-xl font-bold text-sm active:bg-red-50 transition mt-2"><i data-lucide="trash-2" class="w-4 h-4"></i> Reset Semua Data</button>
+                        <div id="reset-confirm-btns" class="hidden flex gap-2 mt-2">
+                            <button id="btn-reset-cancel" class="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl text-sm font-bold transition active:scale-95">Batal</button>
+                            <button id="btn-reset-do" class="flex-1 py-3 bg-red-600 text-white rounded-xl text-sm font-bold transition active:scale-95 shadow-md">Yakin Reset?</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Security (Simplified for Vanilla) -->
+                <div class="bg-white p-5 rounded-2xl border border-gray-100 space-y-3 shadow-sm">
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Keamanan & Cloud</h3>
+                    <div id="security-status" class="text-sm font-medium text-gray-600">
+                        Status: <span id="sec-text" class="font-bold">Memeriksa...</span>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+        
+        <!-- BOTTOM NAVIGATION -->
+        <div class="bg-white border-t p-2 flex justify-around shrink-0 z-40 pb-5 sm:pb-2 shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
+            <button onclick="switchTab('home')" id="nav-home" class="tab-btn active flex flex-col items-center p-2 rounded-xl w-16"><i data-lucide="home" class="w-5 h-5"></i><span class="text-[10px] mt-1">Home</span></button>
+            <button onclick="switchTab('wallet')" id="nav-wallet" class="tab-btn flex flex-col items-center p-2 rounded-xl w-16"><i data-lucide="wallet" class="w-5 h-5"></i><span class="text-[10px] mt-1">Dompet</span></button>
+            <button onclick="switchTab('recap')" id="nav-recap" class="tab-btn flex flex-col items-center p-2 rounded-xl w-16"><i data-lucide="pie-chart" class="w-5 h-5"></i><span class="text-[10px] mt-1">Rekap</span></button>
+            <button onclick="switchTab('profile')" id="nav-profile" class="tab-btn flex flex-col items-center p-2 rounded-xl w-16"><i data-lucide="settings" class="w-5 h-5"></i><span class="text-[10px] mt-1">Setting</span></button>
+        </div>
+
+        <!-- ================= MODALS ================= -->
+        
+        <!-- General Category/Bank Modal -->
+        <div id="modal-general" class="modal absolute inset-0 bg-black/60 z-50 items-center justify-center p-4 backdrop-blur-sm">
+            <div class="bg-white w-full max-w-sm rounded-2xl p-5 shadow-2xl animate-fade-in-up" onclick="event.stopPropagation()">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 id="modal-gen-title" class="font-bold text-gray-800 uppercase tracking-tight">Kategori</h3>
+                    <button onclick="closeModal('modal-general')" class="p-1 hover:bg-gray-100 rounded-full transition"><i data-lucide="x" class="w-5 h-5"></i></button>
+                </div>
+                <div id="modal-bank-icons" class="hidden mb-4 flex gap-2 overflow-x-auto no-scrollbar pb-2"></div>
+                <div class="flex gap-2 mb-4">
+                    <input type="text" id="modal-gen-input" placeholder="Masukkan Nama..." class="flex-1 p-2.5 border rounded-lg text-sm outline-none focus:border-indigo-500" />
+                    <button id="btn-add-item" class="bg-indigo-600 text-white px-3 rounded-lg active:scale-95 transition"><i data-lucide="plus" class="w-4 h-4"></i></button>
+                </div>
+                <div id="modal-gen-list" class="space-y-2 max-h-48 overflow-y-auto"></div>
+            </div>
+        </div>
+
+        <!-- Adjust Balance Modal -->
+        <div id="modal-adjust" class="modal absolute inset-0 bg-black/60 z-50 items-center justify-center p-4 backdrop-blur-sm">
+            <div class="bg-white w-full max-w-sm rounded-2xl p-5 shadow-2xl animate-fade-in-up" onclick="event.stopPropagation()">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 id="modal-adjust-title" class="font-bold text-gray-800 uppercase text-center tracking-tight">Set Saldo</h3>
+                    <button onclick="closeModal('modal-adjust')" class="text-gray-400 hover:text-gray-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+                </div>
+                <input type="text" inputmode="numeric" id="input-adjust" class="w-full p-3 border rounded-xl text-lg font-bold mb-4 outline-none text-center focus:border-indigo-500" placeholder="0" />
+                <button id="btn-save-adjust" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold shadow-md transition active:scale-95 uppercase tracking-widest">Update Saldo</button>
+            </div>
+        </div>
+
+        <!-- Repay Modal -->
+        <div id="modal-repay" class="modal absolute inset-0 bg-black/60 z-50 items-center justify-center p-4 backdrop-blur-sm">
+            <div class="bg-white w-full max-w-sm rounded-2xl p-5 shadow-2xl animate-fade-in-up" onclick="event.stopPropagation()">
+                <div class="flex justify-between items-center mb-2">
+                    <h3 id="modal-repay-title" class="font-bold text-gray-800 uppercase tracking-tight">Pelunasan</h3>
+                    <button onclick="closeModal('modal-repay')" class="text-gray-400 hover:text-gray-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+                </div>
+                <p id="modal-repay-desc" class="text-xs text-gray-500 mb-4 font-medium"></p>
+                <div class="space-y-4">
+                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Nominal (Rp)</label><input type="text" inputmode="numeric" id="input-repay-nom" class="w-full p-2.5 border rounded-lg text-sm font-bold outline-none focus:border-indigo-500"/></div>
+                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Gunakan Dompet</label><select id="select-repay-bank" class="w-full p-2.5 border rounded-lg text-sm font-bold uppercase outline-none focus:border-indigo-500"></select></div>
+                    <button id="btn-submit-repay" class="w-full text-white py-3 rounded-xl font-bold shadow-lg transition active:scale-95 uppercase tracking-widest">Konfirmasi</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit/Delete Modal -->
+        <div id="modal-edit" class="modal absolute inset-0 bg-black/60 z-50 items-center justify-center p-4 backdrop-blur-sm">
+            <div class="bg-white w-full max-w-sm rounded-2xl p-5 shadow-2xl animate-fade-in-up" onclick="event.stopPropagation()">
+                <div class="flex justify-between items-center mb-4 pb-2 border-b border-gray-100 uppercase font-bold text-sm tracking-tight"><span class="flex items-center gap-2"><i data-lucide="edit-2" class="w-4 h-4 text-indigo-600"></i> Edit Transaksi</span><button onclick="closeModal('modal-edit')" class="p-1 hover:bg-gray-100 rounded-full transition"><i data-lucide="x" class="w-5 h-5"></i></button></div>
+                <div class="space-y-4" id="edit-form-content">
+                    <!-- Populated via JS -->
+                </div>
+                <div class="flex gap-2 pt-4">
+                    <button id="btn-del-tx" class="flex-1 py-2.5 bg-red-50 text-red-600 rounded-lg text-xs font-bold uppercase transition active:scale-95 border border-red-100">Hapus</button>
+                    <button id="btn-del-tx-confirm" class="hidden flex-1 py-2.5 bg-red-600 text-white rounded-lg text-xs font-bold uppercase transition active:scale-95 shadow-md">Yakin?</button>
+                    <button id="btn-save-tx" class="flex-[2] py-2.5 bg-indigo-600 text-white rounded-lg text-xs font-bold shadow-md uppercase transition active:scale-95 tracking-wider hover:bg-indigo-700">Simpan</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Image Viewer Modal -->
+        <div id="modal-image" class="modal absolute inset-0 bg-black/90 z-[60] items-center justify-center p-4 backdrop-blur-sm" onclick="closeModal('modal-image')">
+            <div class="relative" onclick="event.stopPropagation()">
+                <button onclick="closeModal('modal-image')" class="absolute -top-12 right-0 text-white hover:text-red-400 transition bg-white/10 p-2 rounded-full"><i data-lucide="x" class="w-6 h-6"></i></button>
+                <img id="viewer-img" class="max-w-full max-h-[80vh] rounded-xl shadow-2xl border border-white/10"/>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- CORE JAVASCRIPT LOGIC -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
+        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
+        import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
+
+        // --- CONSTANTS ---
+        const CHART_COLORS = ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ef4444', '#14b8a6'];
+        const AVAILABLE_ICONS = [
+            { id: 'banknote', label: 'Tunai' }, { id: 'landmark', label: 'Bank' }, 
+            { id: 'smartphone', label: 'E-Wallet' }, { id: 'credit-card', label: 'Kartu' }, 
+            { id: 'piggy-bank', label: 'Tabungan' }, { id: 'briefcase', label: 'Bisnis' }, 
+            { id: 'box', label: 'Lainnya' }, { id: 'wallet', label: 'Dompet' }
+        ];
+
+        // --- GLOBAL STATE ---
+        let state = {
+            transactions: [],
+            categoriesExpense: ['Makanan', 'Transportasi', 'Belanja', 'Tagihan', 'Hiburan', 'Kesehatan', 'Lainnya'],
+            categoriesIncome: ['Gaji', 'Bonus', 'Investasi', 'Pemberian', 'Penjualan', 'Lainnya'],
+            banks: [{ name: 'Tunai', icon: 'banknote' }, { name: 'BCA', icon: 'landmark' }, { name: 'E-Wallet', icon: 'smartphone' }],
+            userProfile: { name: 'Pengguna', email: '', phone: '' },
+            
+            activeTab: 'home',
+            showBalance: true,
+            showAllHistory: false,
+            historyBankFilter: 'All',
+            
+            recapFilter: 'monthly',
+            currentRecapDate: new Date(),
+            
+            // Form State
+            formData: { type: 'expense', debtType: 'in', isReceivable: false, image: '' },
+            
+            // Modal States
+            modalConfigType: '',
+            newBankIcon: 'banknote',
+            adjustBank: '', adjustCurrentBal: 0,
+            repayTx: null,
+            editTxId: null,
+            
+            // Firebase
+            firebaseUser: null,
+            db: null,
+            appId: typeof __app_id !== 'undefined' ? __app_id : 'default-app-id'
+        };
+
+        // --- UTILITIES ---
+        const formatThousand = (val) => !val && val !== 0 ? '' : val.toString().replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        const parseThousand = (val) => !val ? 0 : Number(val.toString().replace(/\./g, ''));
+        const formatRupiah = (n) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n);
+        
+        const showToast = (msg) => {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.classList.remove('hidden');
+            setTimeout(() => t.classList.add('hidden'), 2500);
+        };
+
+        const getBankIcon = (iconId) => AVAILABLE_ICONS.find(i => i.id === iconId)?.id || 'wallet';
+        
+        const getTxAmount = (tx) => {
+            const n = Number(tx.nominal);
+            if (tx.type === 'debt' && tx.bank === 'Tanpa Dompet') return 0;
+            if (tx.type === 'income') return n;
+            if (tx.type === 'expense') return -n;
+            if (tx.type === 'debt') return tx.debtType === 'in' ? n : -n;
+            return 0; 
+        };
+
+        const getTotalBalance = () => state.transactions.reduce((acc, curr) => acc + getTxAmount(curr), 0);
+        
+        const getBankBalance = (bankName) => state.transactions.reduce((acc, curr) => {
+            const n = Number(curr.nominal);
+            if (curr.type === 'transfer') {
+                if (curr.bank === bankName) return acc - n;
+                if (curr.toBank === bankName) return acc + n;
+                return acc;
+            }
+            if ((curr.bank || 'Tunai') === bankName) return acc + getTxAmount(curr);
+            return acc;
+        }, 0);
+
+        // --- FIREBASE INIT ---
+        const initFirebase = async () => {
+            const configStr = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
+            if (!configStr) { finishLoading(false); return; }
+            
+            try {
+                const config = JSON.parse(configStr);
+                const app = initializeApp(config);
+                const auth = getAuth(app);
+                state.db = getFirestore(app);
+
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                onAuthStateChanged(auth, (user) => {
+                    state.firebaseUser = user;
+                    if (user) setupRealtimeListeners(user.uid);
+                    else finishLoading(false);
+                });
+            } catch (e) { console.error("Firebase error", e); finishLoading(false); }
+        };
+
+        let unsubSettings = null, unsubTxs = null;
+        const setupRealtimeListeners = (uid) => {
+            // Settings
+            unsubSettings = onSnapshot(doc(state.db, 'artifacts', state.appId, 'users', uid, 'settings', 'config'), (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    if(data.categoriesExpense) state.categoriesExpense = data.categoriesExpense;
+                    if(data.categoriesIncome) state.categoriesIncome = data.categoriesIncome;
+                    if(data.banks) state.banks = data.banks;
+                    if(data.userProfile) state.userProfile = data.userProfile;
+                }
+                finishLoading(true);
+                renderAll();
+            }, (e) => { console.error(e); finishLoading(false); });
+
+            // Transactions
+            unsubTxs = onSnapshot(collection(state.db, 'artifacts', state.appId, 'users', uid, 'transactions'), (snap) => {
+                let txs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                txs.sort((a, b) => b.createdAt - a.createdAt);
+                state.transactions = txs;
+                saveLocal('local_transactions', txs);
+                renderAll();
+            }, e => console.error(e));
+        };
+
+        const finishLoading = (isOnline) => {
+            document.getElementById('loading-screen').classList.add('opacity-0', 'pointer-events-none');
+            setTimeout(() => document.getElementById('loading-screen').style.display = 'none', 500);
+            
+            document.getElementById('sync-status').textContent = isOnline ? 'Online' : 'Local';
+            if(!isOnline) loadLocalData();
+            document.getElementById('sec-text').textContent = isOnline ? 'Tersinkronisasi ke Cloud' : 'Data Lokal (Tanpa Cloud)';
+            renderAll();
+        };
+
+        const saveToCloudOrLocal = async (collectionName, docId, data) => {
+            if (state.firebaseUser && state.db) {
+                await setDoc(doc(state.db, 'artifacts', state.appId, 'users', state.firebaseUser.uid, collectionName, docId), data, {merge: true});
+            } else {
+                if (collectionName === 'transactions') {
+                    const idx = state.transactions.findIndex(t => t.id === docId);
+                    if(idx >= 0) state.transactions[idx] = data; else state.transactions.unshift(data);
+                    saveLocal('local_transactions', state.transactions);
+                } else if (collectionName === 'settings') {
+                    // Save specific fields locally
+                }
+                renderAll();
+            }
+        };
+
+        const deleteFromCloudOrLocal = async (docId) => {
+            if (state.firebaseUser && state.db) {
+                await deleteDoc(doc(state.db, 'artifacts', state.appId, 'users', state.firebaseUser.uid, 'transactions', docId));
+            } else {
+                state.transactions = state.transactions.filter(t => t.id !== docId);
+                saveLocal('local_transactions', state.transactions);
+                renderAll();
+            }
+        };
+
+        // --- LOCAL STORAGE ---
+        const loadLocalData = () => {
+            const tx = localStorage.getItem('local_transactions');
+            if(tx) state.transactions = JSON.parse(tx);
+            const exp = localStorage.getItem('local_categories_expense');
+            if(exp) state.categoriesExpense = JSON.parse(exp);
+            const inc = localStorage.getItem('local_categories_income');
+            if(inc) state.categoriesIncome = JSON.parse(inc);
+            const b = localStorage.getItem('local_banks');
+            if(b) state.banks = JSON.parse(b);
+        };
+        const saveLocal = (key, val) => localStorage.setItem(key, JSON.stringify(val));
+
+        // --- RENDER FUNCTIONS ---
+        window.switchTab = (tabId) => {
+            state.activeTab = tabId;
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active', 'text-indigo-600', 'bg-indigo-50'));
+            const activeBtn = document.getElementById(`nav-${tabId}`);
+            if(activeBtn) activeBtn.classList.add('active', 'text-indigo-600', 'bg-indigo-50');
+            
+            renderAll();
+        };
+
+        const renderAll = () => {
+            updateGlobalBalanceUI();
+            if (state.activeTab === 'home') renderHome();
+            else if (state.activeTab === 'wallet') renderWallet();
+            else if (state.activeTab === 'recap') renderRecap();
+            else if (state.activeTab === 'profile') renderProfile();
+            lucide.createIcons();
+        };
+
+        const updateGlobalBalanceUI = () => {
+            const tb = formatRupiah(getTotalBalance());
+            document.getElementById('total-balance').textContent = state.showBalance ? tb : 'Rp ••••••••';
+            document.getElementById('wallet-total-balance').textContent = state.showBalance ? tb : 'Rp ••••••';
+            
+            const iconHome = document.getElementById('eye-icon-home');
+            const iconWallet = document.getElementById('eye-icon-wallet');
+            if(iconHome) iconHome.setAttribute('data-lucide', state.showBalance ? 'eye' : 'eye-off');
+            if(iconWallet) iconWallet.setAttribute('data-lucide', state.showBalance ? 'eye' : 'eye-off');
+        };
+
+        // --- RENDER HOME ---
+        const renderHome = () => {
+            renderTxFormFields();
+            renderActiveDebts();
+            renderHistory();
+        };
+
+        const renderTxFormFields = () => {
+            const container = document.getElementById('form-dynamic-fields');
+            let html = '';
+            const t = state.formData.type;
+
+            const bankOptions = state.banks.map(b => `<option value="${b.name}">${b.name}</option>`).join('');
+
+            if (t === 'transfer') {
+                html = `
+                    <div class="animate-fade-in">
+                        <label class="text-[10px] font-bold text-gray-400 uppercase flex justify-between mb-1">
+                            <span>Dari</span><span class="text-indigo-500 tracking-tighter" id="form-bal-from"></span>
+                        </label>
+                        <select id="tx-bank" class="w-full p-2.5 text-xs border rounded-lg outline-none focus:border-indigo-500">${bankOptions}</select>
+                    </div>
+                    <div class="animate-fade-in">
+                        <label class="text-[10px] font-bold text-gray-400 uppercase flex justify-between mb-1">
+                            <span>Ke</span><span class="text-green-500 tracking-tighter" id="form-bal-to"></span>
+                        </label>
+                        <select id="tx-toBank" class="w-full p-2.5 text-xs border rounded-lg outline-none focus:border-indigo-500">${bankOptions}</select>
+                    </div>
+                `;
+                document.getElementById('debt-toggles').classList.add('hidden');
+                document.getElementById('toggle-debt-mode').classList.remove('hidden');
+            } else {
+                const isDebt = t === 'debt';
+                const cats = t === 'income' ? state.categoriesIncome : state.categoriesExpense;
+                const catOptions = cats.map(c => `<option value="${c}">${c}</option>`).join('');
+                
+                html = `
+                    <div class="animate-fade-in">
+                        <label class="text-[10px] font-bold text-gray-400 uppercase mb-1 block">${isDebt ? 'Nama Orang' : 'Kategori'}</label>
+                        ${isDebt ? 
+                            `<input type="text" id="tx-category" class="w-full p-2.5 text-xs border rounded-lg outline-none focus:border-indigo-500" placeholder="Nama..." />` : 
+                            `<select id="tx-category" class="w-full p-2.5 text-xs border rounded-lg outline-none focus:border-indigo-500">${catOptions}</select>`
+                        }
+                    </div>
+                    <div class="animate-fade-in">
+                        <label class="text-[10px] font-bold text-gray-400 uppercase flex justify-between mb-1">
+                            <span>Dompet</span><span class="text-indigo-500 tracking-tighter" id="form-bal-bank"></span>
+                        </label>
+                        <select id="tx-bank" class="w-full p-2.5 text-xs border rounded-lg outline-none focus:border-indigo-500">
+                            ${isDebt ? `<option value="Tanpa Dompet" class="font-bold text-gray-400">-- Tanpa Dompet --</option>` : ''}
+                            ${bankOptions}
+                        </select>
+                    </div>
+                `;
+                
+                if(isDebt) {
+                    document.getElementById('debt-toggles').classList.remove('hidden');
+                    document.getElementById('toggle-debt-mode').classList.add('hidden');
+                    updateDebtToggleUI();
+                } else {
+                    document.getElementById('debt-toggles').classList.add('hidden');
+                    document.getElementById('toggle-debt-mode').classList.remove('hidden');
+                }
+            }
+            container.innerHTML = html;
+            
+            // Attach balance listeners
+            const b1 = document.getElementById('tx-bank');
+            const b2 = document.getElementById('tx-toBank');
+            const updateBals = () => {
+                const elFrom = document.getElementById('form-bal-from');
+                const elTo = document.getElementById('form-bal-to');
+                const elBank = document.getElementById('form-bal-bank');
+                if(elFrom && b1) elFrom.textContent = formatRupiah(getBankBalance(b1.value));
+                if(elTo && b2) elTo.textContent = formatRupiah(getBankBalance(b2.value));
+                if(elBank && b1 && b1.value !== 'Tanpa Dompet') elBank.textContent = formatRupiah(getBankBalance(b1.value));
+                else if(elBank) elBank.textContent = '';
+            };
+            if(b1) b1.addEventListener('change', updateBals);
+            if(b2) b2.addEventListener('change', updateBals);
+            updateBals();
+        };
+
+        const updateDebtToggleUI = () => {
+            const fd = state.formData;
+            const btnMe = document.getElementById('btn-debt-me');
+            const btnRec = document.getElementById('btn-receivable-me');
+            const btnNew = document.getElementById('btn-debt-new');
+            const btnPay = document.getElementById('btn-debt-pay');
+
+            if (!fd.isReceivable) {
+                btnMe.className = "flex-1 py-1 text-[10px] rounded border bg-orange-500 border-orange-600 text-white font-bold transition";
+                btnRec.className = "flex-1 py-1 text-[10px] rounded border bg-white text-gray-400 transition";
+            } else {
+                btnRec.className = "flex-1 py-1 text-[10px] rounded border bg-purple-600 border-purple-700 text-white font-bold transition";
+                btnMe.className = "flex-1 py-1 text-[10px] rounded border bg-white text-gray-400 transition";
+            }
+
+            const isNew = fd.debtType === (fd.isReceivable ? 'out' : 'in');
+            if (isNew) {
+                btnNew.className = "flex-1 py-1.5 text-[10px] font-bold rounded bg-gray-800 text-white transition";
+                btnPay.className = "flex-1 py-1.5 text-[10px] font-bold rounded bg-white text-gray-400 border transition";
+            } else {
+                btnPay.className = "flex-1 py-1.5 text-[10px] font-bold rounded bg-gray-800 text-white transition";
+                btnNew.className = "flex-1 py-1.5 text-[10px] font-bold rounded bg-white text-gray-400 border transition";
+            }
+        };
+
+        const renderActiveDebts = () => {
+            const container = document.getElementById('active-debts-container');
+            let html = '';
+            
+            const debts = {};
+            state.transactions.filter(t => t.type === 'debt' && !t.isReceivable).forEach(t => {
+                debts[t.category] = (debts[t.category] || 0) + (t.debtType === 'in' ? Number(t.nominal) : -Number(t.nominal));
+            });
+            const debtsList = Object.entries(debts).filter(([,v]) => v > 0);
+
+            const recs = {};
+            state.transactions.filter(t => t.type === 'debt' && t.isReceivable).forEach(t => {
+                recs[t.category] = (recs[t.category] || 0) + (t.debtType === 'out' ? Number(t.nominal) : -Number(t.nominal));
+            });
+            const recsList = Object.entries(recs).filter(([,v]) => v > 0);
+
+            if(debtsList.length > 0) {
+                html += `<div class="bg-orange-50 p-4 rounded-xl border border-orange-200 shadow-sm animate-fade-in"><h3 class="text-xs font-bold text-orange-800 mb-2 uppercase">Hutang Belum Lunas</h3>`;
+                debtsList.forEach(([n,v]) => {
+                    html += `<div class="flex justify-between items-center mb-1 text-xs"><span>${n}</span><div class="flex items-center gap-2"><span class="font-bold text-orange-600">${formatRupiah(v)}</span><button onclick="openRepayModal('${n}', ${v}, false)" class="px-2 py-1 bg-orange-500 text-white rounded font-bold transition active:scale-95">Bayar</button></div></div>`;
+                });
+                html += `</div>`;
+            }
+
+            if(recsList.length > 0) {
+                html += `<div class="bg-purple-50 p-4 rounded-xl border border-purple-200 shadow-sm animate-fade-in"><h3 class="text-xs font-bold text-purple-800 mb-2 uppercase">Piutang (Uang di Luar)</h3>`;
+                recsList.forEach(([n,v]) => {
+                    html += `<div class="flex justify-between items-center mb-1 text-xs"><span>${n}</span><div class="flex items-center gap-2"><span class="font-bold text-purple-600">${formatRupiah(v)}</span><button onclick="openRepayModal('${n}', ${v}, true)" class="px-2 py-1 bg-purple-50 text-white rounded font-bold transition active:scale-95">Terima</button></div></div>`;
+                });
+                html += `</div>`;
+            }
+            container.innerHTML = html;
+        };
+
+        const renderHistory = () => {
+            const hFilter = document.getElementById('history-bank-filter');
+            if(hFilter.children.length <= 1) {
+                hFilter.innerHTML = `<option value="All">Semua Dompet</option><option value="Tanpa Dompet">Tanpa Dompet</option>` + state.banks.map(b => `<option value="${b.name}">${b.name}</option>`).join('');
+                hFilter.value = state.historyBankFilter;
+            }
+
+            let filtered = state.transactions;
+            if (state.historyBankFilter !== 'All') {
+                filtered = filtered.filter(tx => tx.bank === state.historyBankFilter || (tx.type === 'transfer' && tx.toBank === state.historyBankFilter));
+            }
+            const displayTx = state.showAllHistory ? filtered : filtered.slice(0, 5);
+
+            document.getElementById('text-toggle-history').textContent = state.showAllHistory ? 'Tutup' : 'Semua';
+
+            const getIcon = (t) => {
+                if(t.type === 'income') return `<i data-lucide="trending-up" class="w-5 h-5 text-green-600"></i>`;
+                if(t.type === 'expense') return `<i data-lucide="trending-down" class="w-5 h-5 text-red-500"></i>`;
+                if(t.type === 'transfer') return `<i data-lucide="arrow-right-left" class="w-5 h-5 text-blue-600"></i>`;
+                if(t.type === 'debt') {
+                    if(t.isReceivable) return t.debtType==='out' ? `<i data-lucide="arrow-up-right" class="w-5 h-5 text-purple-600"></i>` : `<i data-lucide="arrow-down-left" class="w-5 h-5 text-purple-600"></i>`;
+                    return t.debtType==='in' ? `<i data-lucide="credit-card" class="w-5 h-5 text-orange-600"></i>` : `<i data-lucide="check-circle" class="w-5 h-5 text-orange-600"></i>`;
+                }
+                return `<i data-lucide="credit-card" class="w-5 h-5 text-gray-500"></i>`;
+            };
+            const getBg = (t) => {
+                if(t.type === 'income') return 'bg-green-100';
+                if(t.type === 'expense') return 'bg-red-100';
+                if(t.type === 'transfer') return 'bg-blue-100';
+                if(t.type === 'debt') return t.isReceivable ? 'bg-purple-100' : 'bg-orange-100';
+                return 'bg-gray-100';
+            };
+
+            document.getElementById('history-list').innerHTML = displayTx.map(tx => `
+                <div class="flex justify-between items-center p-3 bg-white border rounded-xl shadow-sm">
+                    <div class="flex gap-3 items-center">
+                        <div class="p-2 rounded-full ${getBg(tx)}">${getIcon(tx)}</div>
+                        <div>
+                            <p class="text-xs font-bold text-gray-800">${tx.type==='transfer'?`${tx.bank} ➔ ${tx.toBank}`:tx.category}</p>
+                            <div class="flex gap-1 text-[10px] text-gray-400 items-center">
+                                <span>${tx.date}</span>
+                                ${tx.proof ? `<span>• ${tx.proof}</span>` : ''}
+                                ${tx.image ? `<i data-lucide="image" class="w-3 h-3 text-indigo-500 cursor-pointer ml-1" onclick="openImageViewer('${tx.image}')"></i>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold ${getTxAmount(tx)>=0?'text-green-600':'text-gray-800'}">${getTxAmount(tx)>=0?'+':'-'} ${formatRupiah(tx.nominal)}</span>
+                        <button onclick="openEditModal('${tx.id}')" class="text-gray-400 hover:text-indigo-600 p-1"><i data-lucide="edit-2" class="w-3 h-3"></i></button>
+                    </div>
+                </div>
+            `).join('');
+        };
+
+        // --- RENDER WALLET ---
+        const renderWallet = () => {
+            const list = document.getElementById('wallet-list');
+            list.innerHTML = state.banks.map(b => `
+                <div ondblclick="openAdjustModal('${b.name}', ${getBankBalance(b.name)})" class="flex justify-between items-center p-4 bg-white border rounded-xl shadow-sm cursor-pointer hover:bg-gray-50 transition active:scale-98 select-none">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2 bg-blue-50 text-blue-600 rounded-full"><i data-lucide="${getBankIcon(b.icon)}" class="w-5 h-5"></i></div>
+                        <span class="font-bold text-gray-700 text-sm">${b.name}</span>
+                    </div>
+                    <span class="font-bold text-sm text-gray-800">${state.showBalance ? formatRupiah(getBankBalance(b.name)) : '••••••'}</span>
+                </div>
+            `).join('');
+        };
+
+        // --- RENDER RECAP ---
+        const renderRecap = () => {
+            // Update filter buttons
+            document.querySelectorAll('.recap-filter-btn').forEach(b => {
+                if(b.dataset.filter === state.recapFilter) b.className = "recap-filter-btn flex-1 py-2 text-xs font-bold rounded-lg capitalize transition bg-indigo-100 text-indigo-700";
+                else b.className = "recap-filter-btn flex-1 py-2 text-xs font-bold rounded-lg capitalize transition text-gray-400";
+            });
+
+            // Date Label
+            const d = state.currentRecapDate;
+            let label = '';
+            if(state.recapFilter === 'daily') label = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+            else if(state.recapFilter === 'monthly') label = d.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+            else label = d.getFullYear().toString();
+            document.getElementById('recap-date-label').textContent = label;
+
+            // Calculations
+            const fRecap = state.transactions.filter(tx => { 
+                const td = new Date(tx.date); 
+                if(state.recapFilter === 'daily') return td.toDateString() === d.toDateString(); 
+                if(state.recapFilter === 'monthly') return td.getMonth() === d.getMonth() && td.getFullYear() === d.getFullYear(); 
+                return td.getFullYear() === d.getFullYear(); 
+            });
+
+            const totalIn = fRecap.reduce((a,c) => getTxAmount(c)>0 ? a+Number(c.nominal) : a, 0);
+            const totalOut = fRecap.reduce((a,c) => { const v=getTxAmount(c); return v<0 ? a+Math.abs(v) : a}, 0);
+            const net = totalIn - totalOut;
+
+            document.getElementById('recap-total-in').textContent = formatRupiah(totalIn);
+            document.getElementById('recap-total-out').textContent = formatRupiah(totalOut);
+            const elNet = document.getElementById('recap-net');
+            elNet.textContent = formatRupiah(net);
+            elNet.className = `text-lg font-bold ${net >= 0 ? 'text-blue-700' : 'text-red-600'}`;
+
+            // Chart
+            const expByCat = fRecap.filter(t => getTxAmount(t)<0).reduce((a,c) => { a[c.category] = (a[c.category]||0) + Number(c.nominal); return a; }, {});
+            const sortedExp = Object.entries(expByCat).sort(([,a],[,b]) => b-a).slice(0,8);
+            const totalChart = sortedExp.reduce((a,[,v]) => a+v, 0);
+            
+            const cCont = document.getElementById('chart-container');
+            if(totalChart > 0) {
+                let currentOffset = 0;
+                let circles = '';
+                let legend = '';
+                
+                sortedExp.forEach(([cat, amount], i) => {
+                    const strokeVal = (amount/totalChart) * 251.2;
+                    const color = CHART_COLORS[i % CHART_COLORS.length];
+                    circles += `<circle cx="50" cy="50" r="40" fill="transparent" stroke="${color}" stroke-width="18" stroke-dasharray="${strokeVal} 251.2" stroke-dashoffset="-${currentOffset}" />`;
+                    currentOffset += strokeVal;
+
+                    legend += `
+                        <div>
+                            <div class="flex justify-between text-[10px] mb-1">
+                                <div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full" style="background-color: ${color}"></div><span class="font-bold text-gray-700 uppercase tracking-tight">${cat}</span></div>
+                                <span class="font-bold text-gray-800">${formatRupiah(amount)} (${Math.round(amount/totalOut*100)}%)</span>
+                            </div>
+                            <div class="w-full bg-gray-100 h-1.5 rounded-full"><div class="h-1.5 rounded-full transition-all duration-700" style="width: ${(amount/totalOut)*100}%; background-color: ${color}"></div></div>
+                        </div>
+                    `;
+                });
+
+                cCont.innerHTML = `
+                    <div class="relative w-40 h-40 mb-8">
+                        <svg viewBox="0 0 100 100" class="w-full h-full transform -rotate-90">${circles}</svg>
+                        <div class="absolute inset-0 flex items-center justify-center flex-col"><span class="text-[10px] text-gray-400 font-bold uppercase">Total Keluar</span><span class="text-xs font-bold text-gray-800">${formatRupiah(totalOut)}</span></div>
+                    </div>
+                    <div class="w-full space-y-4">${legend}</div>
+                `;
+            } else {
+                cCont.innerHTML = `<div class="text-center text-xs text-gray-400 py-10 uppercase font-bold tracking-wider">Belum ada data pengeluaran.</div>`;
+            }
+        };
+
+        // --- RENDER PROFILE ---
+        const renderProfile = () => {
+            document.getElementById('prof-name').value = state.userProfile.name || '';
+            document.getElementById('prof-email').value = state.userProfile.email || '';
+            document.getElementById('prof-phone').value = state.userProfile.phone || '';
+        };
+
+        // --- EVENT LISTENERS (ATTACHED ONCE) ---
+        const initEventListeners = () => {
+            // Document wide listener for saving profile
+            ['prof-name', 'prof-email', 'prof-phone'].forEach(id => {
+                document.getElementById(id).addEventListener('change', async (e) => {
+                    const field = id.split('-')[1];
+                    state.userProfile[field] = e.target.value;
+                    if (state.firebaseUser && state.db) await setDoc(doc(state.db, 'artifacts', state.appId, 'users', state.firebaseUser.uid, 'settings', 'config'), { userProfile: state.userProfile }, {merge: true});
+                });
+            });
+
+            // Form Handlers
+            document.getElementById('tx-date').value = state.formData.date || new Date().toISOString().split('T')[0];
+            
+            document.querySelectorAll('input[name="txType"]').forEach(r => {
+                r.addEventListener('change', e => { 
+                    state.formData.type = e.target.value; 
+                    state.formData.category = e.target.value==='income' ? state.categoriesIncome[0] : state.categoriesExpense[0];
+                    renderTxFormFields(); 
+                });
+            });
+
+            // Debt Toggles
+            document.getElementById('btn-debt-me').addEventListener('click', () => { state.formData.isReceivable=false; state.formData.debtType='in'; updateDebtToggleUI(); });
+            document.getElementById('btn-receivable-me').addEventListener('click', () => { state.formData.isReceivable=true; state.formData.debtType='out'; updateDebtToggleUI(); });
+            document.getElementById('btn-debt-new').addEventListener('click', () => { state.formData.debtType = state.formData.isReceivable?'out':'in'; updateDebtToggleUI(); });
+            document.getElementById('btn-debt-pay').addEventListener('click', () => { state.formData.debtType = state.formData.isReceivable?'in':'out'; updateDebtToggleUI(); });
+            
+            document.getElementById('toggle-debt-mode').addEventListener('click', () => {
+                state.formData.type = 'debt'; state.formData.debtType = 'in'; state.formData.isReceivable = false; state.formData.category = ''; state.formData.bank = 'Tanpa Dompet';
+                renderTxFormFields();
+            });
+
+            // Format nominal input
+            const txNom = document.getElementById('tx-nominal');
+            txNom.addEventListener('input', e => txNom.value = formatThousand(e.target.value));
+
+            // Image Upload
+            document.getElementById('tx-image').addEventListener('change', e => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const r = new FileReader();
+                r.onload = ev => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d');
+                        let w = img.width, h = img.height; const MAX = 400;
+                        if(w>h){if(w>MAX){h*=MAX/w;w=MAX;}}else{if(h>MAX){w*=MAX/h;h=MAX;}}
+                        canvas.width=w; canvas.height=h; ctx.drawImage(img,0,0,w,h);
+                        state.formData.image = canvas.toDataURL('image/jpeg', 0.6);
+                        const prev = document.getElementById('tx-image-preview');
+                        prev.src = state.formData.image; prev.classList.remove('hidden');
+                    };
+                    img.src = ev.target.result;
+                };
+                r.readAsDataURL(file);
+            });
+
+            // Submit TX
+            document.getElementById('tx-form').addEventListener('submit', async e => {
+                e.preventDefault();
+                const btn = document.getElementById('btn-submit-tx');
+                const cleanNom = parseThousand(txNom.value);
+                if (!cleanNom || cleanNom <= 0) return;
+
+                const tType = state.formData.type;
+                const dCat = tType === 'transfer' ? '' : document.getElementById('tx-category').value;
+                const dBank = document.getElementById('tx-bank').value;
+                const dToBank = tType === 'transfer' ? document.getElementById('tx-toBank').value : '';
+
+                if (tType === 'transfer' && dBank === dToBank) { showToast("Pilih dompet berbeda!"); return; }
+
+                btn.textContent = '...'; btn.disabled = true;
+                
+                const txId = Date.now().toString();
+                const newTx = {
+                    id: txId, type: tType, date: document.getElementById('tx-date').value,
+                    category: dCat, bank: dBank, toBank: dToBank, nominal: cleanNom,
+                    proof: document.getElementById('tx-proof').value, image: state.formData.image,
+                    debtType: state.formData.debtType, isReceivable: state.formData.isReceivable, createdAt: Date.now()
+                };
+
+                await saveToCloudOrLocal('transactions', txId, newTx);
+                showToast('Tersimpan!');
+                
+                // Reset Form
+                txNom.value = ''; document.getElementById('tx-proof').value = ''; state.formData.image = '';
+                document.getElementById('tx-image-preview').classList.add('hidden');
+                btn.textContent = 'Simpan Transaksi'; btn.disabled = false;
+            });
+
+            // Toggles
+            document.getElementById('toggle-balance-home').addEventListener('click', () => { state.showBalance = !state.showBalance; renderAll(); });
+            document.getElementById('toggle-balance-wallet').addEventListener('click', () => { state.showBalance = !state.showBalance; renderAll(); });
+            
+            document.getElementById('history-bank-filter').addEventListener('change', e => { state.historyBankFilter = e.target.value; renderHistory(); });
+            document.getElementById('btn-toggle-history').addEventListener('click', () => { state.showAllHistory = !state.showAllHistory; renderHistory(); });
+
+            // Recap Navigation
+            document.querySelectorAll('.recap-filter-btn').forEach(b => b.addEventListener('click', e => { state.recapFilter = e.target.dataset.filter; renderRecap(); }));
+            document.getElementById('recap-prev').addEventListener('click', () => changeRecapDate(-1));
+            document.getElementById('recap-next').addEventListener('click', () => changeRecapDate(1));
+
+            // Settings Reset
+            document.getElementById('btn-reset-req').addEventListener('click', () => {
+                document.getElementById('btn-reset-req').classList.add('hidden');
+                document.getElementById('reset-confirm-btns').classList.remove('hidden');
+            });
+            document.getElementById('btn-reset-cancel').addEventListener('click', () => {
+                document.getElementById('reset-confirm-btns').classList.add('hidden');
+                document.getElementById('btn-reset-req').classList.remove('hidden');
+            });
+            document.getElementById('btn-reset-do').addEventListener('click', async () => {
+                document.getElementById('btn-reset-do').textContent = "...";
+                if(state.firebaseUser && state.db) {
+                    for(const tx of state.transactions) await deleteDoc(doc(state.db, 'artifacts', state.appId, 'users', state.firebaseUser.uid, 'transactions', tx.id));
+                }
+                state.transactions = []; saveLocal('local_transactions', []);
+                document.getElementById('reset-confirm-btns').classList.add('hidden');
+                document.getElementById('btn-reset-req').classList.remove('hidden');
+                document.getElementById('btn-reset-do').textContent = "Yakin Reset?";
+                showToast('Reset Selesai!'); renderAll();
+            });
+
+            // Backup & Restore
+            document.getElementById('btn-backup').addEventListener('click', () => {
+                const data = { transactions: state.transactions, categoriesExpense: state.categoriesExpense, categoriesIncome: state.categoriesIncome, banks: state.banks };
+                const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'backup.json'; a.click();
+            });
+            document.getElementById('file-restore').addEventListener('change', e => {
+                const f = e.target.files[0]; if(!f) return;
+                const r = new FileReader();
+                r.onload = async ev => {
+                    try {
+                        const d = JSON.parse(ev.target.result);
+                        if(d.transactions) { state.transactions = d.transactions; saveLocal('local_transactions', d.transactions); }
+                        if(d.categoriesExpense) state.categoriesExpense = d.categoriesExpense;
+                        if(d.categoriesIncome) state.categoriesIncome = d.categoriesIncome;
+                        if(d.banks) state.banks = d.banks;
+                        // Trigger sync
+                        if(state.firebaseUser && state.db) {
+                            for(const tx of d.transactions) await setDoc(doc(state.db, 'artifacts', state.appId, 'users', state.firebaseUser.uid, 'transactions', tx.id), tx);
+                            await setDoc(doc(state.db, 'artifacts', state.appId, 'users', state.firebaseUser.uid, 'settings', 'config'), { categoriesExpense: state.categoriesExpense, categoriesIncome: state.categoriesIncome, banks: state.banks }, {merge:true});
+                        }
+                        showToast("Data Dipulihkan!"); renderAll();
+                    } catch(e) { showToast("File Error!"); }
+                }; r.readAsText(f);
+            });
+
+            // Initial load
+            initFirebase();
+            setInterval(() => lucide.createIcons(), 2000); // Failsafe for icons
+        };
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initEventListeners);
+        } else {
+            initEventListeners();
+        }
+
+        const changeRecapDate = (dir) => {
+            const d = new Date(state.currentRecapDate);
+            if (state.recapFilter === 'daily') d.setDate(d.getDate() + dir);
+            else if (state.recapFilter === 'monthly') d.setMonth(d.getMonth() + dir);
+            else d.setFullYear(d.getFullYear() + dir);
+            state.currentRecapDate = d;
+            renderRecap();
+        };
+
+        // --- GLOBAL MODAL FUNCTIONS ---
+        window.closeModal = (id) => document.getElementById(id).classList.remove('show');
+        
+        window.openModalGeneral = (type) => {
+            state.modalConfigType = type;
+            document.getElementById('modal-gen-title').textContent = type === 'bank' ? 'Kelola Dompet' : 'Kategori';
+            const icoList = document.getElementById('modal-bank-icons');
+            if(type === 'bank') {
+                icoList.classList.remove('hidden');
+                icoList.innerHTML = AVAILABLE_ICONS.map(ic => `<button onclick="state.newBankIcon='${ic.id}'; openModalGeneral('bank');" class="p-2 border rounded-lg flex flex-col items-center min-w-[60px] ${state.newBankIcon===ic.id?'bg-indigo-50 border-indigo-500 text-indigo-700 font-bold':'text-gray-500 hover:bg-gray-50'}"><i data-lucide="${ic.id}" class="w-5 h-5"></i><span class="text-[9px] mt-1">${ic.label}</span></button>`).join('');
+            } else { icoList.classList.add('hidden'); }
+            
+            const arr = type==='category_expense' ? state.categoriesExpense : type==='category_income' ? state.categoriesIncome : state.banks;
+            document.getElementById('modal-gen-list').innerHTML = arr.map((item, i) => `
+                <div class="flex justify-between items-center p-2.5 bg-gray-50 rounded-lg text-xs font-bold mb-1 border border-gray-100">
+                    <div class="flex items-center">${type==='bank'?`<i data-lucide="${getBankIcon(item.icon)}" class="w-3 h-3 mr-2 text-indigo-500"></i>`:''} <span>${type==='bank'?item.name:item}</span></div>
+                    <button onclick="removeGenItem(${i})" class="text-red-400 hover:text-red-600 p-1"><i data-lucide="trash-2" class="w-3 h-3"></i></button>
+                </div>
+            `).join('');
+            
+            document.getElementById('modal-general').classList.add('show');
+            lucide.createIcons();
+        };
+
+        document.getElementById('btn-add-item').addEventListener('click', async () => {
+            const v = document.getElementById('modal-gen-input').value.trim(); if(!v) return;
+            const t = state.modalConfigType;
+            if(t==='category_expense') state.categoriesExpense.push(v);
+            else if(t==='category_income') state.categoriesIncome.push(v);
+            else state.banks.push({name:v, icon:state.newBankIcon});
+            document.getElementById('modal-gen-input').value = '';
+            
+            if(state.firebaseUser && state.db) await setDoc(doc(state.db, 'artifacts', state.appId, 'users', state.firebaseUser.uid, 'settings', 'config'), { categoriesExpense: state.categoriesExpense, categoriesIncome: state.categoriesIncome, banks: state.banks }, {merge:true});
+            openModalGeneral(t); renderAll();
+        });
+
+        window.removeGenItem = async (idx) => {
+            const t = state.modalConfigType;
+            if(t==='category_expense' && state.categoriesExpense.length>1) state.categoriesExpense.splice(idx,1);
+            else if(t==='category_income' && state.categoriesIncome.length>1) state.categoriesIncome.splice(idx,1);
+            else if(t==='bank' && state.banks.length>1) state.banks.splice(idx,1);
+            
+            if(state.firebaseUser && state.db) await setDoc(doc(state.db, 'artifacts', state.appId, 'users', state.firebaseUser.uid, 'settings', 'config'), { categoriesExpense: state.categoriesExpense, categoriesIncome: state.categoriesIncome, banks: state.banks }, {merge:true});
+            openModalGeneral(t); renderAll();
+        };
+
+        window.openAdjustModal = (bank, bal) => {
+            state.adjustBank = bank; state.adjustCurrentBal = bal;
+            document.getElementById('modal-adjust-title').textContent = `Set Saldo: ${bank}`;
+            document.getElementById('input-adjust').value = formatThousand(bal);
+            document.getElementById('modal-adjust').classList.add('show');
+            
+            // Need re-attachment to prevent duplicates? Better replace clone or carefully manage.
+            // Using standard assignment.
+        };
+        const inpAdj = document.getElementById('input-adjust');
+        inpAdj.addEventListener('input', e => inpAdj.value = formatThousand(e.target.value));
+        document.getElementById('btn-save-adjust').addEventListener('click', async () => {
+            const actual = parseThousand(inpAdj.value);
+            const diff = actual - state.adjustCurrentBal;
+            if(diff === 0) { closeModal('modal-adjust'); return; }
+            
+            const txId = Date.now().toString();
+            const newTx = { id: txId, date: new Date().toISOString().split('T')[0], category: 'Penyesuaian Saldo', bank: state.adjustBank, nominal: Math.abs(diff), type: diff > 0 ? 'income' : 'expense', debtType: 'in', createdAt: Date.now() };
+            await saveToCloudOrLocal('transactions', txId, newTx);
+            showToast('Saldo Terkoreksi!'); closeModal('modal-adjust');
+        });
+
+        window.openRepayModal = (cat, remaining, isRec) => {
+            state.repayTx = { category: cat, remaining, isReceivable: isRec };
+            document.getElementById('modal-repay-title').textContent = isRec ? 'Terima Pelunasan' : 'Bayar Hutang';
+            document.getElementById('modal-repay-desc').textContent = `${cat} - Sisa: ${formatRupiah(remaining)}`;
+            document.getElementById('input-repay-nom').value = formatThousand(remaining);
+            document.getElementById('select-repay-bank').innerHTML = state.banks.map(b => `<option value="${b.name}">${b.name}</option>`).join('');
+            const btn = document.getElementById('btn-submit-repay');
+            btn.className = `w-full text-white py-3 rounded-xl font-bold shadow-lg transition active:scale-95 uppercase tracking-widest ${isRec ? 'bg-purple-600 hover:bg-purple-700' : 'bg-orange-600 hover:bg-orange-700'}`;
+            document.getElementById('modal-repay').classList.add('show');
+        };
+        const inpRep = document.getElementById('input-repay-nom');
+        inpRep.addEventListener('input', e => inpRep.value = formatThousand(e.target.value));
+        document.getElementById('btn-submit-repay').addEventListener('click', async () => {
+            const n = parseThousand(inpRep.value); if(!n) return;
+            const txId = Date.now().toString();
+            const newTx = { id: txId, date: new Date().toISOString().split('T')[0], category: state.repayTx.category, bank: document.getElementById('select-repay-bank').value, nominal: n, type: 'debt', isReceivable: state.repayTx.isReceivable, debtType: state.repayTx.isReceivable ? 'in' : 'out', createdAt: Date.now() };
+            await saveToCloudOrLocal('transactions', txId, newTx);
+            showToast('Lunas Tersimpan!'); closeModal('modal-repay');
+        });
+
+        window.openEditModal = (id) => {
+            const tx = state.transactions.find(t => t.id === id); if(!tx) return;
+            state.editTxId = id;
+            
+            const isTrans = tx.type === 'transfer';
+            const isDebt = tx.type === 'debt';
+            
+            document.getElementById('edit-form-content').innerHTML = `
+                <div><label class="text-[10px] font-bold text-gray-400 uppercase">Tanggal</label><input type="date" id="ed-date" value="${tx.date}" class="w-full p-2.5 border rounded-lg text-sm outline-none focus:border-indigo-500"/></div>
+                <div><label class="text-[10px] font-bold text-gray-400 uppercase">${isTrans ? 'Ke Bank' : (isDebt ? 'Nama Orang' : 'Keterangan')}</label><input type="text" id="ed-cat" value="${isTrans ? tx.toBank : tx.category}" class="w-full p-2.5 border rounded-lg text-sm outline-none focus:border-indigo-500"/></div>
+                ${!isTrans ? `<div><label class="text-[10px] font-bold text-gray-400 uppercase">Dompet</label><select id="ed-bank" class="w-full p-2.5 border rounded-lg text-sm outline-none focus:border-indigo-500">${isDebt ? `<option value="Tanpa Dompet">-- Tanpa Dompet --</option>`:''}${state.banks.map(b=>`<option value="${b.name}" ${b.name===tx.bank?'selected':''}>${b.name}</option>`).join('')}</select></div>` : ''}
+                <div><label class="text-[10px] font-bold text-gray-400 uppercase">Jumlah (Rp)</label><input type="text" inputmode="numeric" id="ed-nom" value="${formatThousand(tx.nominal)}" class="w-full p-2.5 border rounded-lg text-sm font-bold outline-none focus:border-indigo-500"/></div>
+            `;
+            const edNom = document.getElementById('ed-nom');
+            edNom.addEventListener('input', e => edNom.value = formatThousand(e.target.value));
+            
+            document.getElementById('btn-del-tx').classList.remove('hidden');
+            document.getElementById('btn-del-tx-confirm').classList.add('hidden');
+            document.getElementById('modal-edit').classList.add('show');
+            lucide.createIcons();
+        };
+
+        document.getElementById('btn-del-tx').addEventListener('click', () => {
+            document.getElementById('btn-del-tx').classList.add('hidden');
+            document.getElementById('btn-del-tx-confirm').classList.remove('hidden');
+        });
+        document.getElementById('btn-del-tx-confirm').addEventListener('click', async () => {
+            await deleteFromCloudOrLocal(state.editTxId);
+            showToast('Terhapus!'); closeModal('modal-edit');
+        });
+        document.getElementById('btn-save-tx').addEventListener('click', async () => {
+            const tx = state.transactions.find(t => t.id === state.editTxId); if(!tx) return;
+            const isTrans = tx.type === 'transfer';
+            const catVal = document.getElementById('ed-cat').value;
+            
+            const updates = {
+                date: document.getElementById('ed-date').value,
+                nominal: parseThousand(document.getElementById('ed-nom').value),
+            };
+            if(isTrans) updates.toBank = catVal; else { updates.category = catVal; updates.bank = document.getElementById('ed-bank').value; }
+            
+            await saveToCloudOrLocal('transactions', tx.id, { ...tx, ...updates });
+            showToast('Diperbarui!'); closeModal('modal-edit');
+        });
+
+        window.openImageViewer = (src) => {
+            document.getElementById('viewer-img').src = src;
+            document.getElementById('modal-image').classList.add('show');
+            lucide.createIcons();
+        };
+
+    </script>
+</body>
+</html>
