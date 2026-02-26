@@ -39,21 +39,9 @@
 
     <!-- MAIN APP CONTAINER -->
     <div class="w-full max-w-md bg-white shadow-2xl relative flex flex-col h-[100dvh] sm:h-[90vh] sm:rounded-3xl sm:mt-5 overflow-hidden border-gray-200 sm:border">
-        
-        <!-- HEADER -->
-        <div class="bg-indigo-600 p-4 text-white flex justify-between items-center z-10 shadow-md shrink-0">
-            <div class="flex items-center gap-2">
-                <i data-lucide="wallet" class="text-indigo-200 w-5 h-5"></i>
-                <h1 class="font-bold tracking-widest text-sm uppercase">Keuangan Saya</h1>
-            </div>
-            <div class="text-[10px] bg-indigo-500/50 px-2 py-1 rounded-full flex items-center gap-1 font-medium">
-                <i data-lucide="cloud-upload" id="sync-icon" class="w-3 h-3"></i>
-                <span id="sync-status">Local</span>
-            </div>
-        </div>
 
         <!-- TOAST NOTIFICATION -->
-        <div id="toast" class="hidden absolute top-16 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-[10px] font-bold px-4 py-2 rounded-full shadow-lg z-50 uppercase tracking-widest text-center min-w-[150px] animate-fade-in-down">
+        <div id="toast" class="hidden absolute top-6 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-[10px] font-bold px-4 py-2 rounded-full shadow-lg z-50 uppercase tracking-widest text-center min-w-[150px] animate-fade-in-down">
             Pesan Notifikasi
         </div>
 
@@ -192,7 +180,13 @@
 
             <!-- 4. TAB: PROFILE -->
             <div id="tab-profile" class="tab-content hidden p-6 pb-24 space-y-6 animate-fade-in">
-                <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2"><i data-lucide="settings" class="w-5 h-5 text-indigo-600"></i> Pengaturan</h2>
+                <div class="flex justify-between items-center">
+                    <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2"><i data-lucide="settings" class="w-5 h-5 text-indigo-600"></i> Pengaturan</h2>
+                    <div class="text-[10px] bg-indigo-50 text-indigo-600 px-2.5 py-1 rounded-full flex items-center gap-1 font-bold border border-indigo-100">
+                        <i data-lucide="cloud-upload" id="sync-icon" class="w-3 h-3"></i>
+                        <span id="sync-status">Local</span>
+                    </div>
+                </div>
                 
                 <!-- LOGIN SECTION -->
                 <div id="profile-login-section" class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
@@ -550,7 +544,7 @@
             else if (state.activeTab === 'wallet') renderWallet();
             else if (state.activeTab === 'recap') renderRecap();
             else if (state.activeTab === 'profile') renderProfile();
-            lucide.createIcons();
+            if(window.lucide) lucide.createIcons();
         };
 
         const updateGlobalBalanceUI = () => {
@@ -1010,12 +1004,74 @@
                 }; r.readAsText(f);
             });
 
+            // --- MODAL EVENT LISTENERS ---
+            const btnAddItem = document.getElementById('btn-add-item');
+            if(btnAddItem) btnAddItem.addEventListener('click', async () => {
+                const v = document.getElementById('modal-gen-input').value.trim(); if(!v) return;
+                const t = state.modalConfigType;
+                if(t==='category_expense') state.categoriesExpense.push(v);
+                else if(t==='category_income') state.categoriesIncome.push(v);
+                else state.banks.push({name:v, icon:state.newBankIcon});
+                document.getElementById('modal-gen-input').value = '';
+                await saveToCloudOrLocal('settings', 'config', { categoriesExpense: state.categoriesExpense, categoriesIncome: state.categoriesIncome, banks: state.banks });
+                openModalGeneral(t);
+            });
+
+            const inpAdj = document.getElementById('input-adjust');
+            if(inpAdj) inpAdj.addEventListener('input', e => inpAdj.value = formatThousand(e.target.value));
+            
+            const btnSaveAdj = document.getElementById('btn-save-adjust');
+            if(btnSaveAdj) btnSaveAdj.addEventListener('click', async () => {
+                const actual = parseThousand(inpAdj.value);
+                const diff = actual - state.adjustCurrentBal;
+                if(diff === 0) { closeModal('modal-adjust'); return; }
+                const txId = Date.now().toString();
+                const newTx = { id: txId, date: new Date().toISOString().split('T')[0], category: 'Penyesuaian Saldo', bank: state.adjustBank, nominal: Math.abs(diff), type: diff > 0 ? 'income' : 'expense', debtType: 'in', createdAt: Date.now() };
+                await saveToCloudOrLocal('transactions', txId, newTx);
+                showToast('Saldo Terkoreksi!'); closeModal('modal-adjust');
+            });
+
+            const inpRep = document.getElementById('input-repay-nom');
+            if(inpRep) inpRep.addEventListener('input', e => inpRep.value = formatThousand(e.target.value));
+            
+            const btnSubRep = document.getElementById('btn-submit-repay');
+            if(btnSubRep) btnSubRep.addEventListener('click', async () => {
+                const n = parseThousand(inpRep.value); if(!n) return;
+                const txId = Date.now().toString();
+                const newTx = { id: txId, date: new Date().toISOString().split('T')[0], category: state.repayTx.category, bank: document.getElementById('select-repay-bank').value, nominal: n, type: 'debt', isReceivable: state.repayTx.isReceivable, debtType: state.repayTx.isReceivable ? 'in' : 'out', createdAt: Date.now() };
+                await saveToCloudOrLocal('transactions', txId, newTx);
+                showToast('Lunas Tersimpan!'); closeModal('modal-repay');
+            });
+
+            const btnDelTx = document.getElementById('btn-del-tx');
+            if(btnDelTx) btnDelTx.addEventListener('click', () => {
+                document.getElementById('btn-del-tx').classList.add('hidden');
+                document.getElementById('btn-del-tx-confirm').classList.remove('hidden');
+            });
+
+            const btnDelTxConf = document.getElementById('btn-del-tx-confirm');
+            if(btnDelTxConf) btnDelTxConf.addEventListener('click', async () => {
+                await deleteFromCloudOrLocal(state.editTxId);
+                showToast('Terhapus!'); closeModal('modal-edit');
+            });
+
+            const btnSaveTx = document.getElementById('btn-save-tx');
+            if(btnSaveTx) btnSaveTx.addEventListener('click', async () => {
+                const tx = state.transactions.find(t => t.id === state.editTxId); if(!tx) return;
+                const isTrans = tx.type === 'transfer';
+                const catVal = document.getElementById('ed-cat').value;
+                const updates = { date: document.getElementById('ed-date').value, nominal: parseThousand(document.getElementById('ed-nom').value) };
+                if(isTrans) updates.toBank = catVal; else { updates.category = catVal; updates.bank = document.getElementById('ed-bank').value; }
+                await saveToCloudOrLocal('transactions', tx.id, { ...tx, ...updates });
+                showToast('Diperbarui!'); closeModal('modal-edit');
+            });
+
             // Initial load
             loadLocalData();
             renderAll();
 
             initFirebase();
-            setInterval(() => lucide.createIcons(), 2000); // Failsafe for icons
+            setInterval(() => { if(window.lucide) lucide.createIcons(); }, 2000); // Failsafe for icons
         };
 
         if (document.readyState === 'loading') {
@@ -1054,20 +1110,8 @@
             `).join('');
             
             document.getElementById('modal-general').classList.add('show');
-            lucide.createIcons();
+            if(window.lucide) lucide.createIcons();
         };
-
-        document.getElementById('btn-add-item').addEventListener('click', async () => {
-            const v = document.getElementById('modal-gen-input').value.trim(); if(!v) return;
-            const t = state.modalConfigType;
-            if(t==='category_expense') state.categoriesExpense.push(v);
-            else if(t==='category_income') state.categoriesIncome.push(v);
-            else state.banks.push({name:v, icon:state.newBankIcon});
-            document.getElementById('modal-gen-input').value = '';
-            
-            await saveToCloudOrLocal('settings', 'config', { categoriesExpense: state.categoriesExpense, categoriesIncome: state.categoriesIncome, banks: state.banks });
-            openModalGeneral(t);
-        });
 
         window.removeGenItem = async (idx) => {
             const t = state.modalConfigType;
@@ -1085,18 +1129,6 @@
             document.getElementById('input-adjust').value = formatThousand(bal);
             document.getElementById('modal-adjust').classList.add('show');
         };
-        const inpAdj = document.getElementById('input-adjust');
-        inpAdj.addEventListener('input', e => inpAdj.value = formatThousand(e.target.value));
-        document.getElementById('btn-save-adjust').addEventListener('click', async () => {
-            const actual = parseThousand(inpAdj.value);
-            const diff = actual - state.adjustCurrentBal;
-            if(diff === 0) { closeModal('modal-adjust'); return; }
-            
-            const txId = Date.now().toString();
-            const newTx = { id: txId, date: new Date().toISOString().split('T')[0], category: 'Penyesuaian Saldo', bank: state.adjustBank, nominal: Math.abs(diff), type: diff > 0 ? 'income' : 'expense', debtType: 'in', createdAt: Date.now() };
-            await saveToCloudOrLocal('transactions', txId, newTx);
-            showToast('Saldo Terkoreksi!'); closeModal('modal-adjust');
-        });
 
         window.openRepayModal = (cat, remaining, isRec) => {
             state.repayTx = { category: cat, remaining, isReceivable: isRec };
@@ -1108,15 +1140,6 @@
             btn.className = `w-full text-white py-3 rounded-xl font-bold shadow-lg transition active:scale-95 uppercase tracking-widest ${isRec ? 'bg-purple-600 hover:bg-purple-700' : 'bg-orange-600 hover:bg-orange-700'}`;
             document.getElementById('modal-repay').classList.add('show');
         };
-        const inpRep = document.getElementById('input-repay-nom');
-        inpRep.addEventListener('input', e => inpRep.value = formatThousand(e.target.value));
-        document.getElementById('btn-submit-repay').addEventListener('click', async () => {
-            const n = parseThousand(inpRep.value); if(!n) return;
-            const txId = Date.now().toString();
-            const newTx = { id: txId, date: new Date().toISOString().split('T')[0], category: state.repayTx.category, bank: document.getElementById('select-repay-bank').value, nominal: n, type: 'debt', isReceivable: state.repayTx.isReceivable, debtType: state.repayTx.isReceivable ? 'in' : 'out', createdAt: Date.now() };
-            await saveToCloudOrLocal('transactions', txId, newTx);
-            showToast('Lunas Tersimpan!'); closeModal('modal-repay');
-        });
 
         window.openEditModal = (id) => {
             const tx = state.transactions.find(t => t.id === id); if(!tx) return;
@@ -1132,41 +1155,18 @@
                 <div><label class="text-[10px] font-bold text-gray-400 uppercase">Jumlah (Rp)</label><input type="text" inputmode="numeric" id="ed-nom" value="${formatThousand(tx.nominal)}" class="w-full p-2.5 border rounded-lg text-sm font-bold outline-none focus:border-indigo-500"/></div>
             `;
             const edNom = document.getElementById('ed-nom');
-            edNom.addEventListener('input', e => edNom.value = formatThousand(e.target.value));
+            if(edNom) edNom.addEventListener('input', e => edNom.value = formatThousand(e.target.value));
             
             document.getElementById('btn-del-tx').classList.remove('hidden');
             document.getElementById('btn-del-tx-confirm').classList.add('hidden');
             document.getElementById('modal-edit').classList.add('show');
-            lucide.createIcons();
+            if(window.lucide) lucide.createIcons();
         };
-
-        document.getElementById('btn-del-tx').addEventListener('click', () => {
-            document.getElementById('btn-del-tx').classList.add('hidden');
-            document.getElementById('btn-del-tx-confirm').classList.remove('hidden');
-        });
-        document.getElementById('btn-del-tx-confirm').addEventListener('click', async () => {
-            await deleteFromCloudOrLocal(state.editTxId);
-            showToast('Terhapus!'); closeModal('modal-edit');
-        });
-        document.getElementById('btn-save-tx').addEventListener('click', async () => {
-            const tx = state.transactions.find(t => t.id === state.editTxId); if(!tx) return;
-            const isTrans = tx.type === 'transfer';
-            const catVal = document.getElementById('ed-cat').value;
-            
-            const updates = {
-                date: document.getElementById('ed-date').value,
-                nominal: parseThousand(document.getElementById('ed-nom').value),
-            };
-            if(isTrans) updates.toBank = catVal; else { updates.category = catVal; updates.bank = document.getElementById('ed-bank').value; }
-            
-            await saveToCloudOrLocal('transactions', tx.id, { ...tx, ...updates });
-            showToast('Diperbarui!'); closeModal('modal-edit');
-        });
 
         window.openImageViewer = (src) => {
             document.getElementById('viewer-img').src = src;
             document.getElementById('modal-image').classList.add('show');
-            lucide.createIcons();
+            if(window.lucide) lucide.createIcons();
         };
 
     </script>
